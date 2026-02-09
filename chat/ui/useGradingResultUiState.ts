@@ -3,8 +3,8 @@ import type { ImageGradingResult } from "../types/message";
 
 export const useGradingResultUiState = (images: ImageGradingResult[]) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [showAnalysis, setShowAnalysis] = useState(false);
-    const [thinkingOpen, setThinkingOpen] = useState(true);
+    const [thinkingOpen, setThinkingOpen] = useState(false);
+    const [bodyOpen, setBodyOpen] = useState(false);
 
     const handlePrevImage = () => {
         setCurrentImageIndex((prev) => {
@@ -20,27 +20,21 @@ export const useGradingResultUiState = (images: ImageGradingResult[]) => {
         });
     };
 
-    const handleToggleAnalysis = () => {
-        setShowAnalysis((prev) => {
-            const next = !prev;
-            if (next) {
-                setThinkingOpen(true);
-            }
-            return next;
-        });
-    };
-
     const handleToggleThinking = () => {
         setThinkingOpen((prev) => !prev);
     };
 
+    const handleToggleBody = () => {
+        setBodyOpen((prev) => !prev);
+    };
+
     return {
         currentImageIndex,
-        showAnalysis,
         thinkingOpen,
+        bodyOpen,
         handlePrevImage,
         handleNextImage,
-        handleToggleAnalysis,
         handleToggleThinking,
+        handleToggleBody,
     };
 };
