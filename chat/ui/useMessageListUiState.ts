@@ -9,18 +9,17 @@ const NOTIFICATION_SOUND_URL =
 interface UseMessageListUiStateProps {
     messages: Message[];
     isTyping: boolean;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
     sessionId: string | null;
 }
 
 export const useMessageListUiState = ({
     messages,
     isTyping,
-    messagesEndRef,
     sessionId,
 }: UseMessageListUiStateProps) => {
     const { previewImage, openPreview, closePreview } = useImagePreviewState();
     const contentRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const prevSessionIdRef = useRef<string | null>(null);
     const prevIsTypingRef = useRef(isTyping);
     const toastIdRef = useRef<string | number | null>(null);
@@ -126,11 +125,11 @@ export const useMessageListUiState = ({
 
     return {
         contentRef,
+        messagesEndRef,
         previewImage,
         openPreview,
         closePreview,
         handleScroll,
     };
 };
-
 
