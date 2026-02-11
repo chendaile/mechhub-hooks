@@ -23,18 +23,26 @@ export const useMessageListUiState = ({
     const prevSessionIdRef = useRef<string | null>(null);
     const prevIsTypingRef = useRef(isTyping);
     const toastIdRef = useRef<string | number | null>(null);
+    const [autoOpenThinkingMessageId, setAutoOpenThinkingMessageId] = useState<
+        string | null
+    >(null);
+    const prevAutoOpenMessageIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (sessionId && sessionId !== prevSessionIdRef.current) {
+        if (sessionId !== prevSessionIdRef.current) {
             prevSessionIdRef.current = sessionId;
-            setTimeout(() => {
-                if (messagesEndRef.current) {
-                    messagesEndRef.current.scrollIntoView({
-                        behavior: "auto",
-                        block: "end",
-                    });
-                }
-            }, 0);
+            setAutoOpenThinkingMessageId(null);
+            prevAutoOpenMessageIdRef.current = null;
+            if (sessionId) {
+                setTimeout(() => {
+                    if (messagesEndRef.current) {
+                        messagesEndRef.current.scrollIntoView({
+                            behavior: "auto",
+                            block: "end",
+                        });
+                    }
+                }, 0);
+            }
         }
     }, [sessionId]);
 
@@ -61,6 +69,29 @@ export const useMessageListUiState = ({
         observer.observe(contentEl);
         return () => observer.disconnect();
     }, [messages]);
+
+    useEffect(() => {
+        if (!isTyping || messages.length === 0) return;
+
+        let lastAssistantStudyId: string | null = null;
+        for (let i = messages.length - 1; i >= 0; i -= 1) {
+            const message = messages[i];
+            if (message.role === "assistant" && message.mode === "study") {
+                lastAssistantStudyId = message.id;
+                break;
+            }
+        }
+
+        if (!lastAssistantStudyId) return;
+        if (lastAssistantStudyId === prevAutoOpenMessageIdRef.current) return;
+
+        prevAutoOpenMessageIdRef.current = lastAssistantStudyId;
+        setAutoOpenThinkingMessageId(lastAssistantStudyId);
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+        });
+    }, [isTyping, messages]);
 
     const playNotificationSound = () => {
         try {
@@ -130,5 +161,6 @@ export const useMessageListUiState = ({
         openPreview,
         closePreview,
         handleScroll,
+        autoOpenThinkingMessageId,
     };
 };

@@ -31,7 +31,6 @@ export const useAppView = ({ handleSendMessage }: UseAppViewParams) => {
             (fileAttachments && fileAttachments.length > 0);
 
         if (!hasContent) {
-            switchToChat();
             return;
         }
 
