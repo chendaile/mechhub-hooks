@@ -10,9 +10,18 @@ export class SupabaseChatService {
                   ? raw.content
                   : "";
 
+        const model =
+            typeof raw?.model === "string"
+                ? raw.model.startsWith("gemini-") &&
+                  !raw.model.includes("thinking")
+                    ? `${raw.model}-thinking`
+                    : raw.model
+                : raw?.model;
+
         return {
             ...raw,
             text,
+            model,
         };
     }
 

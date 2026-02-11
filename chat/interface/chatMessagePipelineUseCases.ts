@@ -14,7 +14,7 @@ const createStudyAssistantMessage = (
     text: "",
     reasoning: "",
     mode: submitMessage.mode,
-    model: submitMessage.model,
+    model: getDisplayModel(submitMessage.model),
     createdAt: new Date().toISOString(),
 });
 
@@ -43,10 +43,17 @@ const createGradingAssistantMessage = (
         text: "",
         reasoning: "",
         mode: submitMessage.mode,
-        model: submitMessage.model,
+        model: getDisplayModel(submitMessage.model),
         gradingResult: buildGradingPlaceholderResult(imageUrls, summary),
         createdAt: new Date().toISOString(),
     };
+};
+
+const getDisplayModel = (model: string) => {
+    if (model.startsWith("gemini-") && !model.includes("thinking")) {
+        return `${model}-thinking`;
+    }
+    return model;
 };
 
 interface RunStudyParams {
@@ -107,7 +114,7 @@ export const runStudyPipeline = async ({
         text: response.text,
         reasoning: response.reasoning,
         mode: submitMessage.mode,
-        model: submitMessage.model,
+        model: getDisplayModel(submitMessage.model),
         createdAt: new Date().toISOString(),
     };
 };
@@ -158,7 +165,7 @@ export const runCorrectPipeline = async ({
                     userImageUrls,
                     "未能解析批改结果，请查看思考与正文。",
                 ),
-            model: submitMessage.model,
+            model: getDisplayModel(submitMessage.model),
             createdAt: new Date().toISOString(),
         };
     } catch (error) {
@@ -174,7 +181,7 @@ export const runCorrectPipeline = async ({
                 userImageUrls,
                 "批改失败，请稍后再试。",
             ),
-            model: submitMessage.model,
+            model: getDisplayModel(submitMessage.model),
             createdAt: new Date().toISOString(),
         };
     }
