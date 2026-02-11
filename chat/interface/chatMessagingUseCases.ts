@@ -1,5 +1,8 @@
 import type { Message, SubmitMessage } from "../types";
-import { runCorrectPipeline, runStudyPipeline } from "./chatMessagePipelineUseCases";
+import {
+    runCorrectPipeline,
+    runStudyPipeline,
+} from "./chatMessagePipelineUseCases";
 import { isSubmitMessageEmpty } from "./chatMessagePolicies";
 import {
     generateAndPersistTitle,

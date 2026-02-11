@@ -97,9 +97,9 @@ export const useMessageListUiState = ({
         try {
             const audio = new Audio(NOTIFICATION_SOUND_URL);
             audio.volume = 0.3;
-            audio.play().catch((error) =>
-                console.log("Audio play failed", error),
-            );
+            audio
+                .play()
+                .catch((error) => console.log("Audio play failed", error));
         } catch (error) {
             console.error("Audio error", error);
         }

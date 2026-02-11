@@ -44,9 +44,7 @@ export const useSendState = ({
                 ...(uploadedImageUrls.length > 0
                     ? { imageUrls: uploadedImageUrls }
                     : {}),
-                ...(fileAttachments.length > 0
-                    ? { fileAttachments }
-                    : {}),
+                ...(fileAttachments.length > 0 ? { fileAttachments } : {}),
             };
             setInputValue("");
             resetAttachments();
@@ -62,4 +60,3 @@ export const useSendState = ({
         submitDraft,
     };
 };
-

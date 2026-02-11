@@ -27,7 +27,9 @@ const createSupabaseAdapter = (): StorageAdapter => ({
 
         const {
             data: { publicUrl },
-        } = supabase.storage.from("chat-images").getPublicUrl(sanitizedFileName);
+        } = supabase.storage
+            .from("chat-images")
+            .getPublicUrl(sanitizedFileName);
 
         return {
             publicUrl,

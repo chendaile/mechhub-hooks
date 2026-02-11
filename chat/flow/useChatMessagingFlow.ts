@@ -81,11 +81,13 @@ export const useChatMessagingFlow = ({
         try {
             const controller = new AbortController();
             registerAbortController(activeId, controller);
-            const aiResponse = await chatMessagingUseCases.runAssistantPipeline({
-                activeId,
-                submitMessage,
-                signal: controller.signal,
-            });
+            const aiResponse = await chatMessagingUseCases.runAssistantPipeline(
+                {
+                    activeId,
+                    submitMessage,
+                    signal: controller.signal,
+                },
+            );
 
             chatMessagingUseCases.upsertAssistantMessage(
                 activeId,
@@ -125,4 +127,3 @@ export const useChatMessagingFlow = ({
         handleStopGeneration,
     };
 };
-

@@ -101,9 +101,7 @@ export const useAttachmentUploadState = ({
         fileInputRef.current?.click();
     };
 
-    const handleFileChange = async (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             const newFiles = Array.from(e.target.files);
 
@@ -135,7 +133,10 @@ export const useAttachmentUploadState = ({
                     0,
                 );
 
-                if (existingImageBytes + newImageBytes > MAX_TOTAL_IMAGE_BYTES) {
+                if (
+                    existingImageBytes + newImageBytes >
+                    MAX_TOTAL_IMAGE_BYTES
+                ) {
                     toast.error("图片总大小不能超过 10MB");
                     imagesToUpload.length = 0;
                 }
@@ -219,4 +220,3 @@ export const useAttachmentUploadState = ({
         resetAttachments,
     };
 };
-

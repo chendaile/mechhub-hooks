@@ -130,7 +130,8 @@ export class SupabaseAIGateway {
         }
 
         const now = Math.floor(Date.now() / 1000);
-        const willExpireSoon = !!session.expires_at && session.expires_at < now + 60;
+        const willExpireSoon =
+            !!session.expires_at && session.expires_at < now + 60;
 
         if (!willExpireSoon) {
             return session.access_token;
@@ -340,7 +341,10 @@ export class SupabaseAIGateway {
      */
     static async getResponseStream(
         request: AICompletionRequest,
-        onChunk: (chunk: { type: "content" | "reasoning"; content: string }) => void,
+        onChunk: (chunk: {
+            type: "content" | "reasoning";
+            content: string;
+        }) => void,
         abortSignal?: AbortSignal,
     ): Promise<AICompletionResponse> {
         const { messages, mode, fileAttachments, model } = request;

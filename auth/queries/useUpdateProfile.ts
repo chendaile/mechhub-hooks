@@ -22,7 +22,9 @@ export const useUpdateProfile = () => {
                 name: data.name ?? previousProfile?.name ?? DEFAULT_USER.name,
                 role: data.role ?? previousProfile?.role ?? DEFAULT_USER.role,
                 avatar:
-                    data.avatar ?? previousProfile?.avatar ?? DEFAULT_USER.avatar,
+                    data.avatar ??
+                    previousProfile?.avatar ??
+                    DEFAULT_USER.avatar,
             });
 
             return { previousProfile };

@@ -71,7 +71,9 @@ export const updateMessage = (
     updater: (message: Message) => Message,
 ) => {
     cache.updateChatMessages(sessionId, (msgs) =>
-        msgs.map((message) => (message.id === messageId ? updater(message) : message)),
+        msgs.map((message) =>
+            message.id === messageId ? updater(message) : message,
+        ),
     );
 };
 
