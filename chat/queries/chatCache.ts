@@ -1,6 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { Message } from "../types/message";
-import { ChatSession } from "../types/session";
+import { Message, ChatSession } from "../types";
 import { chatKeys } from "./chatKeys";
 
 const getChatList = (queryClient: QueryClient): ChatSession[] =>
@@ -160,4 +159,3 @@ export const updateChatMessages = (
         });
     });
 };
-

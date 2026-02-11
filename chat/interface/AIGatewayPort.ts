@@ -3,7 +3,7 @@ import type {
     AICompletionResponse,
     GradingResult,
     Message,
-} from "../../types/message";
+} from "../types";
 
 export interface AIGatewayPort {
     getResponseStream(
@@ -14,5 +14,4 @@ export interface AIGatewayPort {
     parseGradingResult(aiReply: string, userImageUrls: string[]): GradingResult | undefined;
     generateTitle(messages: Message[]): Promise<string>;
 }
-
 

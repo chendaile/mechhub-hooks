@@ -1,5 +1,4 @@
-import type { Message } from "../../types/message";
-import type { ChatSession } from "../../types/session";
+import type { Message, ChatSession } from "../types";
 
 export interface ChatQueryUseCases {
     fetchChats(): Promise<ChatSession[]>;

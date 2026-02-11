@@ -1,6 +1,6 @@
-import type { Message, SubmitMessage } from "../types/message";
-import type { AIGatewayPort } from "./ports/AIGatewayPort";
-import type { ChatCachePort } from "./ports/ChatCachePort";
+import type { Message, SubmitMessage } from "../types";
+import type { AIGatewayPort } from "./AIGatewayPort";
+import type { ChatCachePort } from "./ChatCachePort";
 import { appendMessage, updateMessage } from "./chatSessionUseCases";
 import { streamAssistantResponse } from "./chatStreamUseCase";
 
@@ -179,4 +179,3 @@ export const runCorrectPipeline = async ({
         };
     }
 };
-

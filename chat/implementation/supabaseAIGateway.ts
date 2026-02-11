@@ -3,7 +3,7 @@ import {
     AICompletionResponse,
     GradingResult,
     Message,
-} from "../types/message";
+} from "../types";
 import { supabase, supabaseUrl, publicAnonKey } from "../../shared/supabase";
 
 export class SupabaseAIGateway {
@@ -681,4 +681,3 @@ export class SupabaseAIGateway {
         }
     }
 }
-

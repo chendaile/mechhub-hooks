@@ -10,6 +10,7 @@ export interface UserUpdateData {
 export interface AuthPort {
     signIn(email: string, password: string): Promise<unknown>;
     signUp(email: string, password: string): Promise<unknown>;
+    socialLogin(provider: "google" | "github"): Promise<unknown>;
     signOut(): Promise<void>;
     getSession(): Promise<AuthSession | null>;
     onAuthStateChange(

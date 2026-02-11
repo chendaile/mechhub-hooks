@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Message } from "../types/message";
+import { Message } from "../types";
 import { useImagePreviewState } from "./useImagePreviewState";
 
 const NOTIFICATION_SOUND_URL =
@@ -132,4 +132,3 @@ export const useMessageListUiState = ({
         handleScroll,
     };
 };
-

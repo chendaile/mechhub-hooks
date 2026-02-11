@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { ChatCachePort } from "../application/ports/ChatCachePort";
+import type { ChatCachePort } from "../interface/ChatCachePort";
 import {
     findChatById,
     prependChatSession,

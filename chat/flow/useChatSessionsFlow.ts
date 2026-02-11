@@ -1,20 +1,16 @@
 import type { Session } from "@supabase/supabase-js";
-import type { ChatQueryUseCases } from "../application/useCases/ChatQueryUseCases";
-import type { DeleteChatResult } from "../types/message";
+import type { DeleteChatResult } from "../types";
 import { useChatSessionsData } from "./useChatSessionsData";
-import { useChatModeState } from "../state/useChatModeState";
-import { useSessionSelectionState } from "../state/useSessionSelectionState";
+import { useChatModeState } from "../ui/useChatModeState";
+import { useSessionSelectionState } from "../ui/useSessionSelectionState";
 
-export const useChatSessionsFlow = (
-    session: Session | null,
-    chatQueryUseCases: ChatQueryUseCases,
-) => {
+export const useChatSessionsFlow = (session: Session | null) => {
     const {
         chatSessions,
         isLoadingSessions,
         deleteChatSession: deleteChatSessionData,
         handleRenameSession,
-    } = useChatSessionsData(session, chatQueryUseCases);
+    } = useChatSessionsData(session);
 
     const {
         currentSessionId,

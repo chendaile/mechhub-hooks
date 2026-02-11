@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChatMode } from "../types/message";
+import { ChatMode } from "../types";
 
 const DEFAULT_CHAT_MODE: ChatMode = "study";
 
@@ -14,5 +14,4 @@ export const useChatModeState = () => {
         resetChatMode,
     };
 };
-
 

@@ -1,7 +1,7 @@
-import type { Message } from "../types/message";
-import type { AIGatewayPort } from "./ports/AIGatewayPort";
-import type { ChatRepositoryPort } from "./ports/ChatRepositoryPort";
-import type { ChatQueryUseCases } from "./useCases/ChatQueryUseCases";
+import type { Message } from "../types";
+import type { AIGatewayPort } from "./AIGatewayPort";
+import type { ChatRepositoryPort } from "./ChatRepositoryPort";
+import type { ChatQueryUseCases } from "./ChatQueryUseCases";
 
 export const createChatQueryUseCases = (
     chatRepository: ChatRepositoryPort,
@@ -15,4 +15,3 @@ export const createChatQueryUseCases = (
         chatRepository.updateChatTitle(id, newTitle),
     generateTitle: (messages: Message[]) => aiGateway.generateTitle(messages),
 });
-

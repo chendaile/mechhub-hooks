@@ -1,4 +1,4 @@
-import type { AIGatewayPort } from "../application/ports/AIGatewayPort";
+import type { AIGatewayPort } from "../interface/AIGatewayPort";
 import { SupabaseAIGateway } from "./supabaseAIGateway";
 
 export const createSupabaseAIGateway = (): AIGatewayPort => ({

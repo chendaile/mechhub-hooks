@@ -5,6 +5,7 @@ export interface BoundingBox {
     width: number; // width %
     height: number; // height %
 }
+
 export type ChatMode = "study" | "correct";
 
 export interface DeleteChatResult {
@@ -86,4 +87,12 @@ export type StreamCallback = (chunk: StreamChunk) => void;
 
 export interface AIStreamRequest extends AICompletionRequest {
     onChunk: StreamCallback;
+}
+
+export interface ChatSession {
+    id: string;
+    title: string;
+    updatedAt: number;
+    messages?: Message[];
+    isGeneratingTitle?: boolean;
 }

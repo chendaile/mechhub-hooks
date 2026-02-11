@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChatSession } from "../types/session";
+import { ChatSession } from "../types";
 
 interface UseSessionSelectionStateParams {
     chatSessions: ChatSession[];
@@ -37,5 +37,4 @@ export const useSessionSelectionState = ({
         handleStartNewQuest,
     };
 };
-
 

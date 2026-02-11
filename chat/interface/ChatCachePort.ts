@@ -1,5 +1,4 @@
-import type { Message } from "../../types/message";
-import type { ChatSession } from "../../types/session";
+import type { Message, ChatSession } from "../types";
 
 export interface ChatCachePort {
     findChatById(sessionId: string): ChatSession | undefined;
@@ -12,5 +11,4 @@ export interface ChatCachePort {
         updater: (messages: Message[]) => Message[],
     ): void;
 }
-
 

@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-    ChatMode,
-    FileAttachment,
-    SubmitMessage,
-} from "../types/message";
+import { ChatMode, FileAttachment, SubmitMessage } from "../types";
 
 interface UseSendParams {
     mode: ChatMode;
@@ -66,5 +62,4 @@ export const useSendState = ({
         submitDraft,
     };
 };
-
 

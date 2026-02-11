@@ -1,5 +1,4 @@
-import { Message } from "../types/message";
-import { ChatSession } from "../types/session";
+import { Message, ChatSession } from "../types";
 import { supabase } from "../../shared/supabase";
 
 export class SupabaseChatService {
@@ -126,4 +125,3 @@ export class SupabaseChatService {
         }
     }
 }
-

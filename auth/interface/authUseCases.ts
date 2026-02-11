@@ -7,6 +7,8 @@ const createAuthUseCases = (authPort: AuthPort) => ({
         authPort.signIn(email, password),
     signUp: (email: string, password: string) =>
         authPort.signUp(email, password),
+    socialLogin: (provider: "google" | "github") =>
+        authPort.socialLogin(provider),
     signOut: () => authPort.signOut(),
     getSession: () => authPort.getSession(),
     onAuthStateChange: (callback: (session: AuthSession | null) => void) =>

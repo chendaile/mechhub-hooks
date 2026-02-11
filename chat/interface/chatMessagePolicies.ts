@@ -1,4 +1,4 @@
-import type { ChatMode, Message, SubmitMessage } from "../types/message";
+import type { ChatMode, Message, SubmitMessage } from "../types";
 
 export const createChatTitle = (text: string) => text.slice(0, 15) || "新对话";
 
@@ -28,4 +28,3 @@ export const upsertAssistantMessages = (
 
     return [...messages, aiResponse];
 };
-

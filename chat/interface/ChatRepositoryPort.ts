@@ -1,5 +1,4 @@
-import type { Message } from "../../types/message";
-import type { ChatSession } from "../../types/session";
+import type { Message, ChatSession } from "../types";
 
 export interface ChatRepositoryPort {
     fetchChats(): Promise<ChatSession[]>;
@@ -7,5 +6,4 @@ export interface ChatRepositoryPort {
     updateChatTitle(id: string, newTitle: string): Promise<void>;
     deleteChat(id: string): Promise<void>;
 }
-
 

@@ -1,4 +1,4 @@
-import type { Message, SubmitMessage } from "../types/message";
+import type { Message, SubmitMessage } from "../types";
 import { runCorrectPipeline, runStudyPipeline } from "./chatMessagePipelineUseCases";
 import { isSubmitMessageEmpty } from "./chatMessagePolicies";
 import {
@@ -7,8 +7,8 @@ import {
     prepareActiveSession,
     upsertAssistantMessage,
 } from "./chatSessionUseCases";
-import type { AIGatewayPort } from "./ports/AIGatewayPort";
-import type { ChatCachePort } from "./ports/ChatCachePort";
+import type { AIGatewayPort } from "./AIGatewayPort";
+import type { ChatCachePort } from "./ChatCachePort";
 
 interface CreateChatMessagingUseCasesParams {
     cache: ChatCachePort;
@@ -87,4 +87,3 @@ export const createChatMessagingUseCases = ({
 export type ChatMessagingUseCases = ReturnType<
     typeof createChatMessagingUseCases
 >;
-

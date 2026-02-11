@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
-import type { Message, SubmitMessage } from "../types/message";
-import type { ChatMessagingUseCases } from "../application/chatMessagingUseCases";
+import type { Message, SubmitMessage } from "../types";
+import type { ChatMessagingUseCases } from "../interface/chatMessagingUseCases";
 import { useChatGenerationFlow } from "./useChatGenerationFlow";
 
 const createUserMessage = (submitMessage: SubmitMessage): Message => ({
@@ -125,5 +125,4 @@ export const useChatMessagingFlow = ({
         handleStopGeneration,
     };
 };
-
 

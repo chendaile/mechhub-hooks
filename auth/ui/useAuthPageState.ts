@@ -32,6 +32,17 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
         }
     };
 
+    const handleSocialLogin = async (provider: "google" | "github") => {
+        setIsLoading(true);
+        try {
+            await authUseCases.socialLogin(provider);
+        } catch (error: any) {
+            toast.error(error.message || "认证失败");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return {
         mode,
         setMode,
@@ -43,6 +54,7 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
         showPassword,
         setShowPassword,
         handleSubmit,
+        handleSocialLogin,
         isVerificationPending,
         setIsVerificationPending,
     };

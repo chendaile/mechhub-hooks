@@ -1,4 +1,4 @@
-import type { ChatRepositoryPort } from "../application/ports/ChatRepositoryPort";
+import type { ChatRepositoryPort } from "../interface/ChatRepositoryPort";
 import { SupabaseChatService } from "./supabaseChatService";
 
 export const createSupabaseChatRepository = (): ChatRepositoryPort => ({

@@ -24,6 +24,14 @@ export class SupabaseAuthService {
         return data;
     }
 
+    static async socialLogin(provider: "google" | "github") {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider,
+        });
+        if (error) throw error;
+        return data;
+    }
+
     static async signOut() {
         await supabase.auth.signOut();
     }

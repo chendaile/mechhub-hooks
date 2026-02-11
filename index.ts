@@ -1,15 +1,14 @@
 ﻿export { useAuthFlow } from "./auth/flow/useAuthFlow";
-export { useAuthPageState } from "./auth/ui/useAuthUIState";
+export { useAuthPageState } from "./auth/ui/useAuthPageState";
 export { useLandingPageState } from "./landing/ui/useLandingPageState";
-export { useProfileState } from "./profile/ui/useProfileState";
+export { useProfileState } from "./auth/ui/useProfileState";
 export { useSidebarActionsFlow } from "./sidebar/flow/useSidebarActionsFlow";
 export { useSidebarResizeState } from "./sidebar/ui/useSidebarResizeState";
 export { useSessionItemUiState } from "./sidebar/ui/useSessionItemUiState";
 export { useAppView } from "./app/useAppView";
 export type { ActiveView } from "./app/types/view";
 
-export { createDefaultChatWiring } from "./chat/wiring/createDefaultChatWiring";
-export { useDefaultChatWiring } from "./chat/wiring/useDefaultChatWiring";
+export { chatUseCases } from "./chat/interface/chatUseCases";
 export { useChatRuntimeFlow } from "./chat/flow/useChatRuntimeFlow";
 export { useChatSessionsFlow } from "./chat/flow/useChatSessionsFlow";
 export { useMessageListUiState } from "./chat/ui/useMessageListUiState";
@@ -33,9 +32,9 @@ export type {
     GradingResult,
     GradingStep,
     ImageGradingResult,
-} from "./chat/types/message";
-export type { ChatSession } from "./chat/types/session";
-export type { ChatQueryUseCases } from "./chat/application/useCases/ChatQueryUseCases";
+    ChatSession,
+} from "./chat/types";
+export type { ChatQueryUseCases } from "./chat/interface/ChatQueryUseCases";
 
 export type { UserProfile } from "./auth/types";
 export type { AuthMode } from "./auth/types";

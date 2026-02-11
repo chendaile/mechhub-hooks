@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import type { ImageGradingResult } from "../types/message";
+import type { ImageGradingResult } from "../types";
 
 export const useGradingResultUiState = (images: ImageGradingResult[]) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);

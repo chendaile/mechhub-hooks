@@ -3,8 +3,8 @@ import type {
     GradingResult,
     Message,
     SubmitMessage,
-} from "../types/message";
-import type { AIGatewayPort } from "./ports/AIGatewayPort";
+} from "../types";
+import type { AIGatewayPort } from "./AIGatewayPort";
 
 export interface StreamUpdate {
     text: string;
@@ -72,4 +72,3 @@ export const streamAssistantResponse = async ({
         gradingResult,
     };
 };
-

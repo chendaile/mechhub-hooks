@@ -1,24 +1,20 @@
 import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import type { ChatQueryUseCases } from "../application/useCases/ChatQueryUseCases";
 import {
     useChats,
     useDeleteChat,
     useRenameChat,
 } from "../queries/useChatQueries";
 
-export const useChatSessionsData = (
-    session: Session | null,
-    chatQueryUseCases: ChatQueryUseCases,
-) => {
+export const useChatSessionsData = (session: Session | null) => {
     const {
         data: chatSessions = [],
         isLoading,
         isFetching,
-    } = useChats(chatQueryUseCases, !!session);
+    } = useChats(!!session);
     const isLoadingSessions = isLoading || isFetching;
-    const deleteChatMutation = useDeleteChat(chatQueryUseCases);
-    const renameChatMutation = useRenameChat(chatQueryUseCases);
+    const deleteChatMutation = useDeleteChat();
+    const renameChatMutation = useRenameChat();
 
     const deleteChatSession = async (id: string) => {
         if (!session) return { success: false };

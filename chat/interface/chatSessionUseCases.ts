@@ -1,10 +1,9 @@
-import type { ChatMode, Message } from "../types/message";
-import type { ChatSession } from "../types/session";
+import type { ChatMode, Message, ChatSession } from "../types";
 import {
     createChatTitle,
     upsertAssistantMessages,
 } from "./chatMessagePolicies";
-import type { ChatCachePort } from "./ports/ChatCachePort";
+import type { ChatCachePort } from "./ChatCachePort";
 
 interface PrepareActiveSessionParams {
     cache: ChatCachePort;
@@ -136,4 +135,3 @@ export const generateAndPersistTitle = async (
         cache.setChatTitleGenerating(activeId, false);
     }
 };
-

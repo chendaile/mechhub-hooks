@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { FileAttachment } from "../types/message";
+import { FileAttachment } from "../types";
 
 interface ImageAttachment {
     id: string;
@@ -219,5 +219,4 @@ export const useAttachmentUploadState = ({
         resetAttachments,
     };
 };
-
 
