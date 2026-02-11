@@ -1,15 +1,21 @@
-import { useAuthActionsFlow } from "./useAuthActionsFlow";
 import { useAuthData } from "./useAuthData";
-import { useAuthUIState } from "../ui/useAuthUIState";
+import { useAuthActionsFlow } from "./useAuthActionsFlow";
+import { useAuthShowState } from "../ui/useAuthShowState";
 
 export const useAuthFlow = () => {
-    const authState = useAuthData();
-    const authActions = useAuthActionsFlow();
-    const authUI = useAuthUIState();
+    const { session, loading, userProfile } = useAuthData();
+    const { handleUpdateProfile, handleSignOut, isUpdating } =
+        useAuthActionsFlow();
+    const { showAuth, setShowAuth } = useAuthShowState();
 
     return {
-        ...authState,
-        ...authActions,
-        ...authUI,
+        session,
+        loading,
+        userProfile,
+        showAuth,
+        setShowAuth,
+        handleUpdateProfile,
+        handleSignOut,
+        isUpdating,
     };
 };

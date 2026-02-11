@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-export const useAuthUIState = () => {
+export const useAuthShowState = () => {
     const [showAuth, setShowAuth] = useState(false);
 
     return {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { AuthMode } from "../types/auth";
-import { authUseCases } from "../infra/authDeps";
+import { AuthMode } from "../types";
+import { authUseCases } from "../interface/authUseCases";
 
 export const useAuthPageState = (onLoginSuccess: () => void) => {
     const [mode, setMode] = useState<AuthMode>("signin");
@@ -32,14 +32,6 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
         }
     };
 
-    const handleSocialLogin = async (provider: "google" | "github") => {
-        try {
-            await authUseCases.socialLogin(provider);
-        } catch (error: any) {
-            toast.error(error.message);
-        }
-    };
-
     return {
         mode,
         setMode,
@@ -51,7 +43,6 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
         showPassword,
         setShowPassword,
         handleSubmit,
-        handleSocialLogin,
         isVerificationPending,
         setIsVerificationPending,
     };

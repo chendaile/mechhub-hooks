@@ -1,5 +1,5 @@
-import { authUseCases } from "../infra/authDeps";
 import { useUpdateProfile } from "../queries/useUpdateProfile";
+import { authUseCases } from "../interface/authUseCases";
 
 export const useAuthActionsFlow = () => {
     const updateProfileMutation = useUpdateProfile();

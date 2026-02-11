@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { UserProfile } from "../../auth/types/userProfile";
+import { UserProfile } from "../../auth/types";
 
 const DEFAULT_USER = {
     name: "张同学",

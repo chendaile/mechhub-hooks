@@ -1,15 +1,11 @@
 import { useState } from "react";
-import {
-    ChatMode,
-    FileAttachment,
-    SubmitMessage,
-} from "../chat/types/message";
+import { ChatMode, FileAttachment, SubmitMessage } from "../chat/types/message";
 import { ActiveView } from "./types/view";
 
 interface UseAppViewParams {
     handleSendMessage: (
         payload: SubmitMessage,
-        switchToChatView?: () => void,
+        switchToChatView: () => void,
     ) => void;
 }
 
@@ -18,47 +14,20 @@ export const useAppView = ({ handleSendMessage }: UseAppViewParams) => {
 
     const switchToChat = () => setActiveView("chat");
 
-    const onSendMessage = (payload: SubmitMessage) => {
-        handleSendMessage(payload, switchToChat);
-    };
-
-    const onSendMessageWrapper = (
+    const onSendMessage = (
         text: string,
         imageUrls?: string[],
         fileAttachments?: FileAttachment[],
-        model?: string,
+        model: string = "qwen3-vl-235b-a22b-thinking",
         mode: ChatMode = "study",
     ) => {
-        onSendMessage({
-            text,
-            imageUrls,
-            fileAttachments,
-            model: model || "qwen3-vl-235b-a22b-thinking",
-            mode,
-        });
-    };
-
-    const onStartChat = (
-        message?: string,
-        imageUrls?: string[],
-        fileAttachments?: FileAttachment[],
-        model?: string,
-        mode: ChatMode = "study",
-    ) => {
-        onSendMessageWrapper(
-            message || (imageUrls || fileAttachments ? "" : "我们开始吧！"),
-            imageUrls,
-            fileAttachments,
-            model,
-            mode,
-        );
+        const payload = { text, imageUrls, fileAttachments, model, mode };
+        handleSendMessage(payload, switchToChat);
     };
 
     return {
         activeView,
         setActiveView,
         onSendMessage,
-        onSendMessageWrapper,
-        onStartChat,
     };
 };

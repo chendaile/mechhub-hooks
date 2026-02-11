@@ -1,6 +1,5 @@
 import { useSession } from "../queries/useSession";
 import { useUserProfile } from "../queries/useUserProfile";
-import { DEFAULT_USER } from "../constants";
 
 export const useAuthData = () => {
     const { data: session, isLoading } = useSession();
@@ -9,6 +8,6 @@ export const useAuthData = () => {
     return {
         session,
         loading: isLoading,
-        userProfile: userProfile ?? DEFAULT_USER,
+        userProfile: userProfile,
     };
 };

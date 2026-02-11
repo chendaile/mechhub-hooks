@@ -1,5 +1,5 @@
 ﻿export { useAuthFlow } from "./auth/flow/useAuthFlow";
-export { useAuthPageState } from "./auth/ui/useAuthPageState";
+export { useAuthPageState } from "./auth/ui/useAuthUIState";
 export { useLandingPageState } from "./landing/ui/useLandingPageState";
 export { useProfileState } from "./profile/ui/useProfileState";
 export { useSidebarActionsFlow } from "./sidebar/flow/useSidebarActionsFlow";
@@ -37,5 +37,5 @@ export type {
 export type { ChatSession } from "./chat/types/session";
 export type { ChatQueryUseCases } from "./chat/application/useCases/ChatQueryUseCases";
 
-export type { UserProfile } from "./auth/types/userProfile";
-export type { AuthMode } from "./auth/types/auth";
+export type { UserProfile } from "./auth/types";
+export type { AuthMode } from "./auth/types";

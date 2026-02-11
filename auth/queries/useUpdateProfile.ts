@@ -1,24 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authKeys } from "./authKeys";
-import { UserProfile } from "../types/userProfile";
-import { authUseCases } from "../infra/authDeps";
+import { UserProfile } from "../types";
+import { authUseCases } from "../interface/authUseCases";
+import type { UserUpdateData } from "../interface/AuthPort";
+import { DEFAULT_USER } from "../constants";
 
 export const useUpdateProfile = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (data: {
-            name: string;
-            role: string;
-            avatar: string;
-        }) => {
-            await authUseCases.updateUser({
-                name: data.name,
-                role: data.role,
-                avatar_url: data.avatar,
-            });
-            return data;
+        mutationFn: async (data: UserUpdateData) => {
+            await authUseCases.updateUser(data);
         },
         onMutate: async (data) => {
             await queryClient.cancelQueries({ queryKey: authKeys.profile() });
@@ -26,9 +19,10 @@ export const useUpdateProfile = () => {
                 authKeys.profile(),
             );
             queryClient.setQueryData<UserProfile>(authKeys.profile(), {
-                name: data.name,
-                role: data.role,
-                avatar: data.avatar,
+                name: data.name ?? previousProfile?.name ?? DEFAULT_USER.name,
+                role: data.role ?? previousProfile?.role ?? DEFAULT_USER.role,
+                avatar:
+                    data.avatar ?? previousProfile?.avatar ?? DEFAULT_USER.avatar,
             });
 
             return { previousProfile };
