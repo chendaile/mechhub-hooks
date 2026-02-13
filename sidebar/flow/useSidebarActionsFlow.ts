@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-type ActiveView = "home" | "chat" | "profile" | "landing";
+import type { ActiveView } from "../../app/types/view";
 
 interface SidebarHandlers {
     handleSelectSession?: (id: string) => boolean;

@@ -3,7 +3,6 @@ import { UserProfile } from "../types";
 
 export interface UserUpdateData {
     name?: string;
-    role?: string;
     avatar?: string;
 }
 

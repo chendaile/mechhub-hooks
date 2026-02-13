@@ -4,13 +4,16 @@ import { useChatSessionsData } from "./useChatSessionsData";
 import { useChatModeState } from "../ui/useChatModeState";
 import { useSessionSelectionState } from "../ui/useSessionSelectionState";
 
-export const useChatSessionsFlow = (session: Session | null) => {
+export const useChatSessionsFlow = (
+    session: Session | null,
+    isEnabled = true,
+) => {
     const {
         chatSessions,
         isLoadingSessions,
         deleteChatSession: deleteChatSessionData,
         handleRenameSession,
-    } = useChatSessionsData(session);
+    } = useChatSessionsData(session, isEnabled);
 
     const {
         currentSessionId,
@@ -23,11 +26,19 @@ export const useChatSessionsFlow = (session: Session | null) => {
     const { chatMode, setChatMode, resetChatMode } = useChatModeState();
 
     const handleStartNewQuest = () => {
+        if (!isEnabled) {
+            return;
+        }
+
         handleStartNewQuestSession();
         resetChatMode();
     };
 
     const deleteChatSession = async (id: string): Promise<DeleteChatResult> => {
+        if (!isEnabled) {
+            return { success: false, wasCurrentSession: false };
+        }
+
         const result = await deleteChatSessionData(id);
         const wasCurrentSession = currentSessionId === id;
         if (result.success && wasCurrentSession) {

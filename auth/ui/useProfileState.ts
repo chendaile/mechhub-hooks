@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-
+import { useEffect, useState } from "react";
 import { UserProfile } from "../../auth/types";
 
 const DEFAULT_USER = {
@@ -10,31 +9,24 @@ const DEFAULT_USER = {
 
 export const useProfileState = (
     user: UserProfile = DEFAULT_USER,
-    onUpdateProfile: (
-        name: string,
-        role: string,
-        avatar: string,
-    ) => void = () => {},
+    onUpdateProfile: (name: string, avatar: string) => void = () => {},
 ) => {
     const [name, setName] = useState(user.name);
-    const [role, setRole] = useState(user.role);
     const [avatar, setAvatar] = useState(user.avatar);
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         setName(user.name);
-        setRole(user.role);
         setAvatar(user.avatar);
     }, [user]);
 
     const handleSave = () => {
-        onUpdateProfile(name, role, avatar);
+        onUpdateProfile(name, avatar);
         setIsEditing(false);
     };
 
     const handleCancel = () => {
         setName(user.name);
-        setRole(user.role);
         setAvatar(user.avatar);
         setIsEditing(false);
     };
@@ -66,8 +58,7 @@ export const useProfileState = (
     return {
         name,
         setName,
-        role,
-        setRole,
+        role: user.role,
         avatar,
         setAvatar,
         isEditing,

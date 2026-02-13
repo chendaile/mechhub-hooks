@@ -4,12 +4,8 @@ import { authUseCases } from "../interface/authUseCases";
 export const useAuthActionsFlow = () => {
     const updateProfileMutation = useUpdateProfile();
 
-    const handleUpdateProfile = (
-        name: string,
-        role: string,
-        avatar: string,
-    ) => {
-        updateProfileMutation.mutate({ name, role, avatar });
+    const handleUpdateProfile = (name: string, avatar: string) => {
+        updateProfileMutation.mutate({ name, avatar });
     };
 
     const handleSignOut = async () => {

@@ -6,18 +6,21 @@ import {
     useRenameChat,
 } from "../queries/useChatQueries";
 
-export const useChatSessionsData = (session: Session | null) => {
+export const useChatSessionsData = (
+    session: Session | null,
+    isEnabled = true,
+) => {
     const {
         data: chatSessions = [],
         isLoading,
         isFetching,
-    } = useChats(!!session);
+    } = useChats(!!session && isEnabled);
     const isLoadingSessions = isLoading || isFetching;
     const deleteChatMutation = useDeleteChat();
     const renameChatMutation = useRenameChat();
 
     const deleteChatSession = async (id: string) => {
-        if (!session) return { success: false };
+        if (!session || !isEnabled) return { success: false };
 
         try {
             await deleteChatMutation.mutateAsync(id);
@@ -29,6 +32,10 @@ export const useChatSessionsData = (session: Session | null) => {
     };
 
     const handleRenameSession = async (id: string, newTitle: string) => {
+        if (!isEnabled) {
+            return false;
+        }
+
         try {
             await renameChatMutation.mutateAsync({ id, newTitle });
             return true;

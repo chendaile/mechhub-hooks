@@ -7,6 +7,74 @@ export { useSidebarResizeState } from "./sidebar/ui/useSidebarResizeState";
 export { useSessionItemUiState } from "./sidebar/ui/useSessionItemUiState";
 export { useAppView } from "./app/useAppView";
 export type { ActiveView } from "./app/types/view";
+export { useSubmitAssignmentState } from "./assignment/ui/useSubmitAssignmentState";
+export { usePublishAssignmentState } from "./assignment/ui/usePublishAssignmentState";
+export { useGradeAssignmentState } from "./assignment/ui/useGradeAssignmentState";
+export { useViewFeedbackState } from "./assignment/ui/useViewFeedbackState";
+export type {
+    AssignmentStudentSubmission,
+    AssignmentGradeBreakdown,
+    AssignmentKeyInsight,
+} from "./assignment/types";
+export { PERMISSION_LABELS } from "./authz/constants";
+export {
+    hasPermission,
+    isForbiddenError,
+    useAdminUserAccess,
+    useAdminUserSearch,
+    useMyAuthorization,
+    usePermissionGate,
+    useUpsertUserAccess,
+} from "./authz/queries/useAuthorizationQueries";
+export type {
+    PermissionKey,
+    BaseRole,
+    PermissionEffect,
+    AuthorizationSnapshot,
+    UpsertUserAccessPayload,
+    AdminUserSummary,
+} from "./authz/types";
+export { PERMISSION_KEYS } from "./authz/types";
+
+export {
+    isClassForbiddenError,
+    useMyClassContext,
+    useClassMembers,
+    useInviteCodes,
+    useClassThreads,
+    useClassThreadMessages,
+    useCreateClass,
+    useAssignTeacherToClass,
+    useCreateInviteCode,
+    useRevokeInviteCode,
+    useJoinClassByInviteCode,
+    useRemoveStudentFromClass,
+    useCreateGroupThread,
+    usePostClassMessage,
+    useSharePrivateChatToClass,
+    useShareGradeResultToClass,
+} from "./class/queries/useClassQueries";
+export type {
+    ClassRole,
+    ClassSummary,
+    MyClassContext,
+    InviteCodeSummary,
+    ClassMemberSummary,
+    ClassMembersSnapshot,
+    CreateClassPayload,
+    CreateInviteCodePayload,
+    JoinClassByCodePayload,
+    AssignTeacherPayload,
+    RemoveStudentPayload,
+    ClassThreadType,
+    ClassThread,
+    ClassThreadMessageRole,
+    ClassThreadMessage,
+    PostClassMessagePayload,
+    PostClassMessageResult,
+    SharePrivateChatPayload,
+    ShareGradeResultPayload,
+} from "./class/types";
 
 export { chatUseCases } from "./chat/interface/chatUseCases";
 export { useChatRuntimeFlow } from "./chat/flow/useChatRuntimeFlow";
