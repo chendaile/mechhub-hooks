@@ -79,6 +79,10 @@ export const useSessionItemUiState = ({
         onDelete?.();
     };
 
+    const closeMenu = () => {
+        setIsMenuOpen(false);
+    };
+
     return {
         isEditing,
         editTitle,
@@ -90,6 +94,7 @@ export const useSessionItemUiState = ({
         handleStartEdit,
         handleToggleMenu,
         handleDelete,
+        closeMenu,
         setEditTitle,
         canRename: Boolean(onRename),
     };

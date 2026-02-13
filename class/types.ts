@@ -32,6 +32,7 @@ export interface ClassMemberSummary {
     userId: string;
     email: string;
     name: string;
+    avatar?: string | null;
     role: ClassRole;
     status?: "active" | "removed";
     joinedAt?: string;
@@ -92,6 +93,7 @@ export interface ClassThreadMessage {
     senderUserId?: string | null;
     senderName?: string | null;
     senderEmail?: string | null;
+    senderAvatar?: string | null;
     role: ClassThreadMessageRole;
     content: Record<string, unknown>;
     mentionsAi: boolean;

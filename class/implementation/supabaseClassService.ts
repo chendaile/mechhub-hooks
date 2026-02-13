@@ -186,6 +186,12 @@ const normalizeClassMember = (value: unknown): ClassMemberSummary => {
                 : typeof row.email === "string"
                   ? row.email
                   : "Unknown User",
+        avatar:
+            typeof row.avatar === "string"
+                ? row.avatar
+                : typeof row.avatar_url === "string"
+                  ? row.avatar_url
+                  : null,
         role: row.role === "teacher" ? "teacher" : "student",
         status:
             row.status === "active" || row.status === "removed"
@@ -297,6 +303,12 @@ const normalizeClassThreadMessage = (value: unknown): ClassThreadMessage => {
                 ? row.senderEmail
                 : typeof row.sender_email === "string"
                   ? row.sender_email
+                  : null,
+        senderAvatar:
+            typeof row.senderAvatar === "string"
+                ? row.senderAvatar
+                : typeof row.sender_avatar === "string"
+                  ? row.sender_avatar
                   : null,
         role:
             row.role === "assistant" || row.role === "system"
