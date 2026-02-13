@@ -5,6 +5,13 @@ export { useProfileState } from "./auth/ui/useProfileState";
 export { useSidebarActionsFlow } from "./sidebar/flow/useSidebarActionsFlow";
 export { useSidebarResizeState } from "./sidebar/ui/useSidebarResizeState";
 export { useSessionItemUiState } from "./sidebar/ui/useSessionItemUiState";
+export { useSidebarSessionsState } from "./sidebar/ui/useSidebarSessionsState";
+export {
+    useSidebarFooterState,
+    type SidebarFooterAction,
+    type SidebarFooterActionViewKey,
+    type SidebarFooterActionAudience,
+} from "./sidebar/ui/useSidebarFooterState";
 export { useAppView } from "./app/useAppView";
 export type { ActiveView } from "./app/types/view";
 export { useSubmitAssignmentState } from "./assignment/ui/useSubmitAssignmentState";
