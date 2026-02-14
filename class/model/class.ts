@@ -11,6 +11,11 @@ export interface ClassSummary {
     updatedAt?: string;
 }
 
+export interface CreateClassResult {
+    classSummary: ClassSummary;
+    inviteCode: string;
+}
+
 export interface MyClassContext {
     teachingClasses: ClassSummary[];
     joinedClasses: ClassSummary[];
@@ -20,6 +25,7 @@ export interface MyClassContext {
 
 export interface InviteCodeSummary {
     id: string;
+    code: string;
     codeLast4: string;
     expiresAt: string;
     maxUses: number | null;

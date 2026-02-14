@@ -1,6 +1,7 @@
 export type {
     ClassRole,
     ClassSummary,
+    CreateClassResult,
     InviteCodeSummary,
     MyClassContext,
 } from "./model/class";

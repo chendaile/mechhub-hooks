@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ActiveView } from "../../app/types/view";
 import type {
     SidebarActionAudience,
     SidebarAssignmentAction,
@@ -6,6 +7,7 @@ import type {
 } from "../model/sidebarSessionModel";
 
 interface UseSidebarFooterStateParams {
+    activeView: ActiveView;
     onSubmitAssignment?: () => void;
     onViewFeedback?: () => void;
     onPublishAssignment?: () => void;
@@ -20,6 +22,7 @@ interface AssignmentCandidate {
 }
 
 export const useSidebarFooterState = ({
+    activeView,
     onSubmitAssignment,
     onViewFeedback,
     onPublishAssignment,
@@ -66,6 +69,12 @@ export const useSidebarFooterState = ({
         onGradeAssignment,
     ]);
 
+    const isAssignmentsActive = useMemo(
+        () => assignmentActions.some((action) => action.key === activeView),
+        [activeView, assignmentActions],
+    );
+    const previousIsAssignmentsActiveRef = useRef(isAssignmentsActive);
+
     const assignmentsTitle = useMemo(() => {
         const hasStudentActions = assignmentActions.some(
             (action) => action.audience === "student",
@@ -85,12 +94,21 @@ export const useSidebarFooterState = ({
         return "Assignments";
     }, [assignmentActions]);
 
+    useEffect(() => {
+        const wasAssignmentsActive = previousIsAssignmentsActiveRef.current;
+        if (!wasAssignmentsActive && isAssignmentsActive) {
+            setIsAssignmentsOpen(true);
+        }
+        previousIsAssignmentsActiveRef.current = isAssignmentsActive;
+    }, [isAssignmentsActive]);
+
     const handleToggleAssignmentsOpen = () => {
         setIsAssignmentsOpen((previous) => !previous);
     };
 
     const state = {
         isAssignmentsOpen,
+        isAssignmentsActive,
     };
 
     const actions = {
@@ -109,6 +127,7 @@ export const useSidebarFooterState = ({
         assignmentActions: derived.assignmentActions,
         assignmentsTitle: derived.assignmentsTitle,
         isAssignmentsOpen: state.isAssignmentsOpen,
+        isAssignmentsActive: state.isAssignmentsActive,
         handleToggleAssignmentsOpen: actions.handleToggleAssignmentsOpen,
     };
 };

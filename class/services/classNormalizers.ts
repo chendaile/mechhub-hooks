@@ -62,6 +62,8 @@ export const normalizeInviteCodeSummary = (
 
     return {
         id: getString(row, "id"),
+        code:
+            getString(row, "code") || getString(row, "codeValue", "code_value"),
         codeLast4: getString(row, "codeLast4", "code_last4"),
         expiresAt: getString(row, "expiresAt", "expires_at"),
         maxUses:

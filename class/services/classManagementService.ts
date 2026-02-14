@@ -2,6 +2,7 @@ import type {
     AssignTeacherPayload,
     ClassMembersSnapshot,
     ClassSummary,
+    CreateClassResult,
     CreateClassPayload,
     CreateInviteCodePayload,
     InviteCodeSummary,
@@ -44,15 +45,22 @@ export const getMyClassContext = async (): Promise<MyClassContext> => {
 
 export const createClass = async (
     payload: CreateClassPayload,
-): Promise<ClassSummary> => {
-    const result = await invokeClassManagement<{ class?: unknown }>({
+): Promise<CreateClassResult> => {
+    const result = await invokeClassManagement<{
+        class?: unknown;
+        inviteCode?: string;
+    }>({
         action: "create_class",
         name: payload.name,
         description: payload.description ?? "",
         teacher_user_id: payload.teacherUserId ?? "",
     });
 
-    return normalizeClassSummary(result.class);
+    return {
+        classSummary: normalizeClassSummary(result.class),
+        inviteCode:
+            typeof result.inviteCode === "string" ? result.inviteCode : "",
+    };
 };
 
 export const assignTeacherToClass = async (

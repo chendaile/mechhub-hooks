@@ -29,11 +29,16 @@ export const useSessionSelectionState = ({
         setCurrentSessionId(null);
     };
 
+    const handleClearCurrentSessionSelection = () => {
+        setCurrentSessionId(null);
+    };
+
     return {
         currentSessionId,
         setCurrentSessionId,
         messages,
         handleSelectSession,
         handleStartNewQuest,
+        handleClearCurrentSessionSelection,
     };
 };

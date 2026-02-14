@@ -21,6 +21,7 @@ export const useChatSessionsFlow = (
         messages,
         handleSelectSession,
         handleStartNewQuest: handleStartNewQuestSession,
+        handleClearCurrentSessionSelection,
     } = useSessionSelectionState({ chatSessions });
 
     const { chatMode, setChatMode, resetChatMode } = useChatModeState();
@@ -57,6 +58,7 @@ export const useChatSessionsFlow = (
         setChatMode,
         handleSelectSession,
         handleStartNewQuest,
+        handleClearCurrentSessionSelection,
         deleteChatSession,
         handleRenameSession,
     };
