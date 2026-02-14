@@ -1,7 +1,4 @@
-import type {
-    AssignmentGradeBreakdown,
-    AssignmentKeyInsight,
-} from "../types";
+import type { AssignmentGradeBreakdown, AssignmentKeyInsight } from "../types";
 
 interface UseViewFeedbackStateParams {
     assignmentTitle: string;
@@ -20,7 +17,7 @@ interface UseViewFeedbackStateParams {
     onShareToClass?: () => void;
 }
 
-export const useViewFeedbackState = ({
+export const deriveViewFeedbackModel = ({
     assignmentTitle,
     overallScore,
     maxScore,
@@ -38,7 +35,10 @@ export const useViewFeedbackState = ({
 }: UseViewFeedbackStateParams) => {
     const scorePercentage =
         maxScore > 0
-            ? Math.max(0, Math.min(100, Math.round((overallScore / maxScore) * 100)))
+            ? Math.max(
+                  0,
+                  Math.min(100, Math.round((overallScore / maxScore) * 100)),
+              )
             : 0;
 
     return {

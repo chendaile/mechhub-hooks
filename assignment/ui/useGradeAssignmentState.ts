@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useGradeDraftState } from "../states/useGradeDraftState";
+import { useStudentCursorState } from "../states/useStudentCursorState";
+import { useGradeSubmitFlow } from "../flows/useGradeSubmitFlow";
 import type { AssignmentStudentSubmission } from "../types";
 
 interface UseGradeAssignmentStateParams {
@@ -10,95 +12,61 @@ interface UseGradeAssignmentStateParams {
     ) => Promise<void>;
 }
 
-const MAX_SCORE = 100;
-
 export const useGradeAssignmentState = ({
     students,
     onSaveGrade,
 }: UseGradeAssignmentStateParams) => {
-    const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
-    const [scores, setScores] = useState<Record<string, number>>({});
-    const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
-    const [isLoading, setIsLoading] = useState(false);
+    const cursor = useStudentCursorState(students);
+    const draft = useGradeDraftState();
+    const submit = useGradeSubmitFlow({ onSaveGrade });
 
-    useEffect(() => {
-        setCurrentStudentIndex((prevIndex) => {
-            if (students.length === 0) {
-                return 0;
-            }
-            return Math.min(prevIndex, students.length - 1);
-        });
-    }, [students.length]);
-
-    const currentStudent = students[currentStudentIndex];
+    const { currentStudentIndex, currentStudent } = cursor.state;
     const currentStudentId = currentStudent?.id;
-    const score = currentStudentId ? scores[currentStudentId] ?? 0 : 0;
-    const feedback = currentStudentId ? feedbacks[currentStudentId] ?? "" : "";
-
-    const handleScoreChange = (nextScore: number) => {
-        if (!currentStudentId) {
-            return;
-        }
-
-        const safeScore = Math.min(Math.max(nextScore, 0), MAX_SCORE);
-        setScores((prevScores) => ({
-            ...prevScores,
-            [currentStudentId]: safeScore,
-        }));
-    };
-
-    const handleFeedbackChange = (nextFeedback: string) => {
-        if (!currentStudentId) {
-            return;
-        }
-
-        setFeedbacks((prevFeedbacks) => ({
-            ...prevFeedbacks,
-            [currentStudentId]: nextFeedback,
-        }));
-    };
+    const { score, feedback } =
+        draft.derived.deriveGradeDraft(currentStudentId);
 
     const handleSaveGrade = async () => {
-        if (!currentStudentId) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            await onSaveGrade(currentStudentId, score, feedback);
-            if (currentStudentIndex < students.length - 1) {
-                setCurrentStudentIndex((prevIndex) => prevIndex + 1);
-            }
-        } finally {
-            setIsLoading(false);
-        }
+        await submit.actions.handleSaveGrade({
+            studentId: currentStudentId,
+            score,
+            feedback,
+            hasNextStudent: currentStudentIndex < students.length - 1,
+            moveToNextStudent: cursor.actions.handleNextStudent,
+        });
     };
 
-    const handlePrevStudent = () => {
-        setCurrentStudentIndex((prevIndex) => Math.max(prevIndex - 1, 0));
-    };
-
-    const handleNextStudent = () => {
-        if (students.length === 0) {
-            return;
-        }
-
-        setCurrentStudentIndex((prevIndex) =>
-            Math.min(prevIndex + 1, students.length - 1),
-        );
-    };
-
-    return {
+    const state = {
         currentStudentIndex,
         currentStudent,
         score,
         feedback,
-        maxScore: MAX_SCORE,
-        isLoading,
-        handleScoreChange,
-        handleFeedbackChange,
+        maxScore: draft.state.maxScore,
+        isLoading: submit.state.isLoading,
+    };
+
+    const actions = {
+        handleScoreChange: (nextScore: number) =>
+            draft.actions.handleScoreChange(currentStudentId, nextScore),
+        handleFeedbackChange: (nextFeedback: string) =>
+            draft.actions.handleFeedbackChange(currentStudentId, nextFeedback),
         handleSaveGrade,
-        handlePrevStudent,
-        handleNextStudent,
+        handlePrevStudent: cursor.actions.handlePrevStudent,
+        handleNextStudent: cursor.actions.handleNextStudent,
+    };
+
+    return {
+        state,
+        actions,
+        currentStudentIndex: state.currentStudentIndex,
+        currentStudent: state.currentStudent,
+        score: state.score,
+        feedback: state.feedback,
+        maxScore: state.maxScore,
+        isLoading: state.isLoading,
+        handleScoreChange: actions.handleScoreChange,
+        handleFeedbackChange: actions.handleFeedbackChange,
+        handleSaveGrade: actions.handleSaveGrade,
+        handlePrevStudent: actions.handlePrevStudent,
+        handleNextStudent: actions.handleNextStudent,
     };
 };

@@ -1,3 +1,5 @@
+import type { Session } from "@supabase/supabase-js";
+
 export interface UserProfile {
     name: string;
     avatar: string;
@@ -7,4 +9,3 @@ export interface UserProfile {
 export type AuthMode = "signin" | "register";
 
 export type AuthSession = Session;
-import type { Session } from "@supabase/supabase-js";

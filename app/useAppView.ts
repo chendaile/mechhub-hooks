@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { ChatMode, FileAttachment, SubmitMessage } from "../chat/types";
-import { ActiveView } from "./types/view";
+import type { ChatMode, FileAttachment, SubmitMessage } from "../chat/types";
+import { useActiveViewState } from "./states/useActiveViewState";
+import {
+    buildStartChatPayload,
+    buildSubmitMessagePayload,
+} from "./utils/messagePayloadBuilders";
 
 interface UseAppViewParams {
     handleSendMessage: (
@@ -10,46 +13,49 @@ interface UseAppViewParams {
 }
 
 export const useAppView = ({ handleSendMessage }: UseAppViewParams) => {
-    const [activeView, setActiveView] = useState<ActiveView>("home");
+    const activeViewState = useActiveViewState("home");
 
-    const switchToChat = () => setActiveView("chat");
+    const switchToChat = () => {
+        activeViewState.actions.setActiveView("chat");
+    };
 
     const onSendMessage = (payload: SubmitMessage) => {
-        handleSendMessage(payload, switchToChat);
+        handleSendMessage(buildSubmitMessagePayload(payload), switchToChat);
     };
 
     const onStartChat = (
         message?: string,
         imageUrls?: string[],
         fileAttachments?: FileAttachment[],
-        model: string = "qwen3-vl-235b-a22b-thinking",
+        model?: string,
         mode: ChatMode = "study",
     ) => {
-        const hasContent =
-            !!message?.trim() ||
-            (imageUrls && imageUrls.length > 0) ||
-            (fileAttachments && fileAttachments.length > 0);
-
-        if (!hasContent) {
-            return;
-        }
-
-        const payload: SubmitMessage = {
-            text: message ?? "",
+        const payload = buildStartChatPayload({
+            message,
+            imageUrls,
+            fileAttachments,
             model,
             mode,
-            ...(imageUrls && imageUrls.length > 0 ? { imageUrls } : {}),
-            ...(fileAttachments && fileAttachments.length > 0
-                ? { fileAttachments }
-                : {}),
-        };
+        });
+
+        if (!payload) {
+            return;
+        }
 
         handleSendMessage(payload, switchToChat);
     };
 
     return {
-        activeView,
-        setActiveView,
+        state: {
+            activeView: activeViewState.state.activeView,
+        },
+        actions: {
+            setActiveView: activeViewState.actions.setActiveView,
+            onSendMessage,
+            onStartChat,
+        },
+        activeView: activeViewState.state.activeView,
+        setActiveView: activeViewState.actions.setActiveView,
         onSendMessage,
         onStartChat,
     };

@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createChatMessagingUseCases } from "../interface/chatMessagingUseCases";
-import { chatUseCases } from "../interface/chatUseCases";
-import { useGenerateTitle, useSaveChat } from "../queries/useChatQueries";
+import { chatDomainInterface } from "../interface/ChatDomainInterface";
+import {
+    useGenerateTitleMutation,
+    useSaveChatMutation,
+} from "../queries/useChatQueries";
 import { useChatMessagingFlow } from "./useChatMessagingFlow";
 
 interface UseChatRuntimeFlowParams {
@@ -15,15 +18,15 @@ export const useChatRuntimeFlow = ({
     setCurrentSessionId,
 }: UseChatRuntimeFlowParams) => {
     const queryClient = useQueryClient();
-    const saveChatMutation = useSaveChat();
-    const generateTitleMutation = useGenerateTitle();
+    const saveChatMutation = useSaveChatMutation();
+    const generateTitleMutation = useGenerateTitleMutation();
     const currentSessionIdRef = useRef<string | null>(null);
 
     const chatMessagingUseCases = useMemo(() => {
-        const cache = chatUseCases.createChatCachePort(queryClient);
+        const cache = chatDomainInterface.createChatCachePort(queryClient);
         return createChatMessagingUseCases({
             cache,
-            aiGateway: chatUseCases.aiGateway,
+            aiGateway: chatDomainInterface.aiGateway,
         });
     }, [queryClient]);
 

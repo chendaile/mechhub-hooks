@@ -1,98 +1,52 @@
-import { useState, useRef } from "react";
+import { useDetailPanelState } from "../states/useDetailPanelState";
+import { useImagePanZoomState } from "../states/useImagePanZoomState";
+import { useStepSelectionState } from "../states/useStepSelectionState";
 
 export const useImageGradingPanelState = () => {
-    const [showDetail, setShowDetail] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [activeStepIndex, setActiveStepIndex] = useState<number | null>(null);
-    const stepRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-    const stepListContainerRef = useRef<HTMLDivElement | null>(null);
-
-    const openDetail = () => setShowDetail(true);
-    const closeDetail = () => setShowDetail(false);
-
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-    const handleSelectStep = (idx: number) => {
-        const newIndex = activeStepIndex === idx ? null : idx;
-        setActiveStepIndex(newIndex);
-        if (newIndex !== null) {
-            const stepEl = stepRefs.current.get(newIndex);
-            const container = stepListContainerRef.current;
-            if (!stepEl || !container) return;
-
-            const containerTop = container.getBoundingClientRect().top;
-            const stepTop = stepEl.getBoundingClientRect().top;
-            const deltaTop = stepTop - containerTop;
-            const targetTop =
-                container.scrollTop +
-                deltaTop -
-                (container.clientHeight - stepEl.clientHeight) / 2;
-
-            container.scrollTo({
-                top: Math.max(0, targetTop),
-                behavior: "smooth",
-            });
-        }
-    };
-
-    // Zoom and Pan State
-    const [scale, setScale] = useState(1);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const dragStartRef = useRef({ x: 0, y: 0 });
-
-    const handleZoomIn = () => {
-        setScale((prev) => Math.min(prev + 0.2, 4));
-    };
-
-    const handleZoomOut = () => {
-        setScale((prev) => Math.max(prev - 0.2, 0.5));
-    };
-
-    const handleReset = () => {
-        setScale(1);
-        setPosition({ x: 0, y: 0 });
-    };
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent text selection
-        setIsDragging(true);
-        dragStartRef.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y,
-        };
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging) return;
-        const newX = e.clientX - dragStartRef.current.x;
-        const newY = e.clientY - dragStartRef.current.y;
-        setPosition({ x: newX, y: newY });
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
+    const detailPanelState = useDetailPanelState();
+    const stepSelectionState = useStepSelectionState();
+    const imagePanZoomState = useImagePanZoomState();
 
     return {
-        showDetail,
-        openDetail,
-        closeDetail,
-        isSidebarOpen,
-        toggleSidebar,
-        activeStepIndex,
-        handleSelectStep,
-        stepRefs,
-        stepListContainerRef,
-        // Zoom & Pan
-        scale,
-        position,
-        isDragging,
-        handleZoomIn,
-        handleZoomOut,
-        handleReset,
-        handleMouseDown,
-        handleMouseMove,
-        handleMouseUp,
+        state: {
+            showDetail: detailPanelState.state.isDetailOpen,
+            isSidebarOpen: detailPanelState.state.isSidebarOpen,
+            activeStepIndex: stepSelectionState.state.activeStepIndex,
+            stepRefs: stepSelectionState.state.stepRefs,
+            stepListContainerRef: stepSelectionState.state.stepListContainerRef,
+            scale: imagePanZoomState.state.scale,
+            position: imagePanZoomState.state.position,
+            isDragging: imagePanZoomState.state.isDragging,
+        },
+        actions: {
+            openDetail: detailPanelState.actions.openDetail,
+            closeDetail: detailPanelState.actions.closeDetail,
+            toggleSidebar: detailPanelState.actions.toggleSidebar,
+            handleSelectStep: stepSelectionState.actions.handleSelectStep,
+            handleZoomIn: imagePanZoomState.actions.handleZoomIn,
+            handleZoomOut: imagePanZoomState.actions.handleZoomOut,
+            handleReset: imagePanZoomState.actions.handleReset,
+            handleMouseDown: imagePanZoomState.actions.handleMouseDown,
+            handleMouseMove: imagePanZoomState.actions.handleMouseMove,
+            handleMouseUp: imagePanZoomState.actions.handleMouseUp,
+        },
+        showDetail: detailPanelState.state.isDetailOpen,
+        openDetail: detailPanelState.actions.openDetail,
+        closeDetail: detailPanelState.actions.closeDetail,
+        isSidebarOpen: detailPanelState.state.isSidebarOpen,
+        toggleSidebar: detailPanelState.actions.toggleSidebar,
+        activeStepIndex: stepSelectionState.state.activeStepIndex,
+        handleSelectStep: stepSelectionState.actions.handleSelectStep,
+        stepRefs: stepSelectionState.state.stepRefs,
+        stepListContainerRef: stepSelectionState.state.stepListContainerRef,
+        scale: imagePanZoomState.state.scale,
+        position: imagePanZoomState.state.position,
+        isDragging: imagePanZoomState.state.isDragging,
+        handleZoomIn: imagePanZoomState.actions.handleZoomIn,
+        handleZoomOut: imagePanZoomState.actions.handleZoomOut,
+        handleReset: imagePanZoomState.actions.handleReset,
+        handleMouseDown: imagePanZoomState.actions.handleMouseDown,
+        handleMouseMove: imagePanZoomState.actions.handleMouseMove,
+        handleMouseUp: imagePanZoomState.actions.handleMouseUp,
     };
 };

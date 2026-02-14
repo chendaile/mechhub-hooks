@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react";
+import {
+    persistSidebarWidth,
+    readSidebarWidth,
+} from "../utils/sidebarWidthStorage";
 
 const MIN_SIDEBAR_WIDTH = 240;
 const MAX_SIDEBAR_WIDTH = 500;
 const DEFAULT_SIDEBAR_WIDTH = 280;
+const SIDEBAR_WIDTH_CONFIG = {
+    min: MIN_SIDEBAR_WIDTH,
+    max: MAX_SIDEBAR_WIDTH,
+    fallback: DEFAULT_SIDEBAR_WIDTH,
+} as const;
 
 export const useSidebarResizeState = () => {
-    const [sidebarWidth, setSidebarWidth] = useState(() => {
-        if (typeof window === "undefined") return DEFAULT_SIDEBAR_WIDTH;
-        const saved = localStorage.getItem("sidebarWidth");
-        const parsed = saved ? parseInt(saved, 10) : DEFAULT_SIDEBAR_WIDTH;
-        return isNaN(parsed) ? DEFAULT_SIDEBAR_WIDTH : parsed;
-    });
+    const [sidebarWidth, setSidebarWidth] = useState(() =>
+        readSidebarWidth(SIDEBAR_WIDTH_CONFIG),
+    );
     const [isResizing, setIsResizing] = useState(false);
 
     useEffect(() => {
@@ -23,7 +29,7 @@ export const useSidebarResizeState = () => {
                 newWidth <= MAX_SIDEBAR_WIDTH
             ) {
                 setSidebarWidth(newWidth);
-                localStorage.setItem("sidebarWidth", newWidth.toString());
+                persistSidebarWidth(newWidth, SIDEBAR_WIDTH_CONFIG);
             }
         };
 
@@ -50,8 +56,18 @@ export const useSidebarResizeState = () => {
         setIsResizing(true);
     };
 
-    return {
+    const state = {
         sidebarWidth,
+    };
+
+    const actions = {
         handleMouseDown,
+    };
+
+    return {
+        state,
+        actions,
+        sidebarWidth: state.sidebarWidth,
+        handleMouseDown: actions.handleMouseDown,
     };
 };

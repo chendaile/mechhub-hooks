@@ -1,7 +1,8 @@
 import type { RefObject } from "react";
 import type { Message, SubmitMessage } from "../types";
 import type { ChatMessagingUseCases } from "../interface/chatMessagingUseCases";
-import { useChatGenerationFlow } from "./useChatGenerationFlow";
+import { useChatSubmissionGuardState } from "./useChatSubmissionGuardState";
+import { getHooksLogger } from "../../shared/logger";
 
 const createUserMessage = (submitMessage: SubmitMessage): Message => ({
     ...submitMessage,
@@ -32,6 +33,7 @@ export const useChatMessagingFlow = ({
     saveChat,
     generateTitle,
 }: UseChatMessagingParams) => {
+    const logger = getHooksLogger();
     const {
         typingSessionIds,
         setSessionTyping,
@@ -41,7 +43,7 @@ export const useChatMessagingFlow = ({
         markSubmitting,
         resetSubmissionState,
         clearNewChatSubmitting,
-    } = useChatGenerationFlow();
+    } = useChatSubmissionGuardState();
 
     const handleStopGeneration = () => {
         const sessionId = currentSessionIdRef.current;
@@ -110,7 +112,7 @@ export const useChatMessagingFlow = ({
                 );
             }
         } catch (error) {
-            console.error("AI response failed", error);
+            logger.error("AI response failed", error);
 
             if (isNewChat) {
                 chatMessagingUseCases.removeSession(activeId);

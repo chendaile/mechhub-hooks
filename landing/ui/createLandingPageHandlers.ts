@@ -1,4 +1,4 @@
-export const useLandingPageState = (
+export const createLandingPageHandlers = (
     onStart: () => void,
     onLogin: () => void,
 ) => {

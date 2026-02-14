@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import type { ActiveView } from "../../app/types/view";
+import type {
+    SidebarActionAudience,
+    SidebarAssignmentAction,
+    SidebarAssignmentActionViewKey,
+} from "../model/sidebarSessionModel";
 
 interface UseSidebarFooterStateParams {
     onSubmitAssignment?: () => void;
@@ -8,27 +12,10 @@ interface UseSidebarFooterStateParams {
     onGradeAssignment?: () => void;
 }
 
-export type SidebarFooterActionViewKey = Extract<
-    ActiveView,
-    | "submitAssignment"
-    | "viewFeedback"
-    | "publishAssignment"
-    | "gradeAssignment"
->;
-
-export type SidebarFooterActionAudience = "student" | "teacher";
-
-export interface SidebarFooterAction {
-    key: SidebarFooterActionViewKey;
-    label: string;
-    audience: SidebarFooterActionAudience;
-    onClick: () => void;
-}
-
 interface AssignmentCandidate {
-    key: SidebarFooterActionViewKey;
+    key: SidebarAssignmentActionViewKey;
     label: string;
-    audience: SidebarFooterActionAudience;
+    audience: SidebarActionAudience;
     onClick?: () => void;
 }
 
@@ -40,7 +27,7 @@ export const useSidebarFooterState = ({
 }: UseSidebarFooterStateParams) => {
     const [isAssignmentsOpen, setIsAssignmentsOpen] = useState(false);
 
-    const assignmentActions = useMemo<SidebarFooterAction[]>(() => {
+    const assignmentActions = useMemo<SidebarAssignmentAction[]>(() => {
         const candidates: AssignmentCandidate[] = [
             {
                 key: "submitAssignment",
@@ -69,7 +56,7 @@ export const useSidebarFooterState = ({
         ];
 
         return candidates.filter(
-            (action): action is SidebarFooterAction =>
+            (action): action is SidebarAssignmentAction =>
                 typeof action.onClick === "function",
         );
     }, [
@@ -102,10 +89,26 @@ export const useSidebarFooterState = ({
         setIsAssignmentsOpen((previous) => !previous);
     };
 
-    return {
+    const state = {
+        isAssignmentsOpen,
+    };
+
+    const actions = {
+        handleToggleAssignmentsOpen,
+    };
+
+    const derived = {
         assignmentActions,
         assignmentsTitle,
-        isAssignmentsOpen,
-        handleToggleAssignmentsOpen,
+    };
+
+    return {
+        state,
+        actions,
+        derived,
+        assignmentActions: derived.assignmentActions,
+        assignmentsTitle: derived.assignmentsTitle,
+        isAssignmentsOpen: state.isAssignmentsOpen,
+        handleToggleAssignmentsOpen: actions.handleToggleAssignmentsOpen,
     };
 };

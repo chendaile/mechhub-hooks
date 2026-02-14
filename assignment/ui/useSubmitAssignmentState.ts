@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useSubmitAssignmentFlow } from "../flows/useSubmitAssignmentFlow";
+import { useSubmitFileState } from "../states/useSubmitFileState";
 
 interface UseSubmitAssignmentStateParams {
     onSubmit: (file: File, comments: string) => Promise<void>;
@@ -7,51 +8,35 @@ interface UseSubmitAssignmentStateParams {
 export const useSubmitAssignmentState = ({
     onSubmit,
 }: UseSubmitAssignmentStateParams) => {
-    const [file, setFile] = useState<File>();
-    const [fileName, setFileName] = useState<string>();
-    const [fileUrl, setFileUrl] = useState<string>();
-    const [comments, setComments] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-
-    useEffect(() => {
-        if (!file) {
-            setFileUrl(undefined);
-            return;
-        }
-
-        const objectUrl = URL.createObjectURL(file);
-        setFileUrl(objectUrl);
-
-        return () => {
-            URL.revokeObjectURL(objectUrl);
-        };
-    }, [file]);
-
-    const handleFileSelect = (selectedFile: File) => {
-        setFile(selectedFile);
-        setFileName(selectedFile.name);
-    };
+    const fileState = useSubmitFileState();
+    const submitFlow = useSubmitAssignmentFlow({ onSubmit });
 
     const handleSubmit = async () => {
-        if (!file) {
-            return;
-        }
+        await submitFlow.actions.handleSubmit(fileState.state.file);
+    };
 
-        try {
-            setIsLoading(true);
-            await onSubmit(file, comments);
-        } finally {
-            setIsLoading(false);
-        }
+    const state = {
+        fileName: fileState.state.fileName,
+        fileUrl: fileState.state.fileUrl,
+        comments: submitFlow.state.comments,
+        isLoading: submitFlow.state.isLoading,
+    };
+
+    const actions = {
+        handleFileSelect: fileState.actions.handleFileSelect,
+        setComments: submitFlow.actions.setComments,
+        handleSubmit,
     };
 
     return {
-        fileName,
-        fileUrl,
-        comments,
-        isLoading,
-        handleFileSelect,
-        setComments,
-        handleSubmit,
+        state,
+        actions,
+        fileName: state.fileName,
+        fileUrl: state.fileUrl,
+        comments: state.comments,
+        isLoading: state.isLoading,
+        handleFileSelect: actions.handleFileSelect,
+        setComments: actions.setComments,
+        handleSubmit: actions.handleSubmit,
     };
 };

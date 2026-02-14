@@ -1,17 +1,17 @@
 import { useRef, useState } from "react";
 
-export const useChatGenerationFlow = () => {
+export const useChatSubmissionGuardState = () => {
     const [typingSessionIds, setTypingSessionIds] = useState<Set<string>>(
         new Set(),
     );
 
     const abortControllersRef = useRef(new Map<string, AbortController>());
-    const isSubmittingRef = useRef(new Set<string>());
+    const submittingSessionIdsRef = useRef(new Set<string>());
     const isSubmittingNewChatRef = useRef(false);
 
     const setSessionTyping = (sessionId: string, isTyping: boolean) => {
-        setTypingSessionIds((prev) => {
-            const next = new Set(prev);
+        setTypingSessionIds((previous) => {
+            const next = new Set(previous);
             if (isTyping) {
                 next.add(sessionId);
             } else {
@@ -32,13 +32,19 @@ export const useChatGenerationFlow = () => {
         abortControllersRef.current.get(sessionId) || null;
 
     const canSubmit = (sessionId: string | null, isNewChat: boolean) => {
-        if (isNewChat) return !isSubmittingNewChatRef.current;
-        if (!sessionId) return false;
-        return !isSubmittingRef.current.has(sessionId);
+        if (isNewChat) {
+            return !isSubmittingNewChatRef.current;
+        }
+
+        if (!sessionId) {
+            return false;
+        }
+
+        return !submittingSessionIdsRef.current.has(sessionId);
     };
 
     const markSubmitting = (sessionId: string, isNewChat: boolean) => {
-        isSubmittingRef.current.add(sessionId);
+        submittingSessionIdsRef.current.add(sessionId);
         if (isNewChat) {
             isSubmittingNewChatRef.current = true;
         }
@@ -47,7 +53,7 @@ export const useChatGenerationFlow = () => {
     const resetSubmissionState = (sessionId: string, isNewChat: boolean) => {
         setSessionTyping(sessionId, false);
         abortControllersRef.current.delete(sessionId);
-        isSubmittingRef.current.delete(sessionId);
+        submittingSessionIdsRef.current.delete(sessionId);
         if (isNewChat) {
             isSubmittingNewChatRef.current = false;
         }
@@ -58,6 +64,18 @@ export const useChatGenerationFlow = () => {
     };
 
     return {
+        state: {
+            typingSessionIds,
+        },
+        actions: {
+            setSessionTyping,
+            registerAbortController,
+            getAbortController,
+            canSubmit,
+            markSubmitting,
+            resetSubmissionState,
+            clearNewChatSubmitting,
+        },
         typingSessionIds,
         setSessionTyping,
         registerAbortController,

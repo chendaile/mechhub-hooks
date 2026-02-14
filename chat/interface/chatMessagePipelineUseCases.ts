@@ -3,6 +3,7 @@ import type { AIGatewayPort } from "./AIGatewayPort";
 import type { ChatCachePort } from "./ChatCachePort";
 import { appendMessage, updateMessage } from "./chatSessionUseCases";
 import { streamAssistantResponse } from "./chatStreamUseCase";
+import { getHooksLogger } from "../../shared/logger";
 
 const createStudyAssistantMessage = (
     submitMessage: SubmitMessage,
@@ -125,6 +126,7 @@ export const runCorrectPipeline = async ({
     activeId,
     submitMessage,
 }: RunCorrectParams): Promise<Message> => {
+    const logger = getHooksLogger();
     const processingMessageId = (Date.now() + 1).toString();
     const userImageUrls = submitMessage.imageUrls || [];
     const processingMessage = createGradingAssistantMessage(
@@ -169,7 +171,7 @@ export const runCorrectPipeline = async ({
             createdAt: new Date().toISOString(),
         };
     } catch (error) {
-        console.error("AI response failed (correct mode)", error);
+        logger.error("AI response failed (correct mode)", error);
         return {
             id: processingMessageId,
             role: "assistant",

@@ -4,6 +4,7 @@ import {
     upsertAssistantMessages,
 } from "./chatMessagePolicies";
 import type { ChatCachePort } from "./ChatCachePort";
+import { getHooksLogger } from "../../shared/logger";
 
 interface PrepareActiveSessionParams {
     cache: ChatCachePort;
@@ -121,6 +122,7 @@ export const generateAndPersistTitle = async (
         title: string;
     }) => Promise<unknown>,
 ) => {
+    const logger = getHooksLogger();
     cache.setChatTitleGenerating(activeId, true);
     try {
         const aiGeneratedTitle = await generateTitle(finalMessages);
@@ -132,7 +134,7 @@ export const generateAndPersistTitle = async (
             title: aiGeneratedTitle,
         });
     } catch (titleError) {
-        console.error("Failed to generate AI title:", titleError);
+        logger.error("Failed to generate AI title", titleError);
     } finally {
         cache.setChatTitleGenerating(activeId, false);
     }

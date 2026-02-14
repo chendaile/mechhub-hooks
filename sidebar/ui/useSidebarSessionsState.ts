@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { SidebarClassGroup } from "@views/sidebar/types";
+import type { SidebarClassGroup } from "../model/sidebarSessionModel";
 
 export const useSidebarSessionsState = (classGroups: SidebarClassGroup[]) => {
     const [openGroupIds, setOpenGroupIds] = useState<Set<string>>(new Set());
@@ -41,8 +41,18 @@ export const useSidebarSessionsState = (classGroups: SidebarClassGroup[]) => {
         });
     };
 
-    return {
+    const state = {
         openGroupIds,
+    };
+
+    const actions = {
         handleToggleGroup,
+    };
+
+    return {
+        state,
+        actions,
+        openGroupIds: state.openGroupIds,
+        handleToggleGroup: actions.handleToggleGroup,
     };
 };

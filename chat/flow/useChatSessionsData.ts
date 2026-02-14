@@ -1,23 +1,25 @@
 import type { Session } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import {
-    useChats,
-    useDeleteChat,
-    useRenameChat,
+    useChatsQuery,
+    useDeleteChatMutation,
+    useRenameChatMutation,
 } from "../queries/useChatQueries";
+import { getHooksLogger } from "../../shared/logger";
 
 export const useChatSessionsData = (
     session: Session | null,
     isEnabled = true,
 ) => {
+    const logger = getHooksLogger();
     const {
         data: chatSessions = [],
         isLoading,
         isFetching,
-    } = useChats(!!session && isEnabled);
+    } = useChatsQuery(!!session && isEnabled);
     const isLoadingSessions = isLoading || isFetching;
-    const deleteChatMutation = useDeleteChat();
-    const renameChatMutation = useRenameChat();
+    const deleteChatMutation = useDeleteChatMutation();
+    const renameChatMutation = useRenameChatMutation();
 
     const deleteChatSession = async (id: string) => {
         if (!session || !isEnabled) return { success: false };
@@ -26,7 +28,7 @@ export const useChatSessionsData = (
             await deleteChatMutation.mutateAsync(id);
             return { success: true };
         } catch (error) {
-            console.error("Failed to delete chat", error);
+            logger.error("Failed to delete chat", error);
             return { success: false };
         }
     };
@@ -40,7 +42,7 @@ export const useChatSessionsData = (
             await renameChatMutation.mutateAsync({ id, newTitle });
             return true;
         } catch (error) {
-            console.error("Failed to rename chat", error);
+            logger.error("Failed to rename chat", error);
             const message =
                 error instanceof Error ? error.message : String(error ?? "");
             const isNetworkOrCorsError =

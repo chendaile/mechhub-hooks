@@ -1,9 +1,9 @@
-import { useSession } from "../queries/useSession";
-import { useUserProfile } from "../queries/useUserProfile";
+import { useSessionQuery } from "../queries/useSession";
+import { useUserProfileQuery } from "../queries/useUserProfile";
 
 export const useAuthData = () => {
-    const { data: session, isLoading } = useSession();
-    const { data: userProfile } = useUserProfile(session ?? null);
+    const { data: session, isLoading } = useSessionQuery();
+    const { data: userProfile } = useUserProfileQuery(session ?? null);
 
     return {
         session,

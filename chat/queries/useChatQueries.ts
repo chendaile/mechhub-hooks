@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Message, ChatSession } from "../types";
-import { chatUseCases } from "../interface/chatUseCases";
+import { chatDomainInterface } from "../interface/ChatDomainInterface";
 import {
     mergeChatSessions,
     removeChatSession,
@@ -9,12 +9,12 @@ import {
 } from "./chatCache";
 import { chatKeys } from "./chatKeys";
 
-export const useChats = (enabled = true) => {
+export const useChatsQuery = (enabled = true) => {
     const queryClient = useQueryClient();
 
     return useQuery({
         queryKey: chatKeys.lists(),
-        queryFn: chatUseCases.chatQueryUseCases.fetchChats,
+        queryFn: chatDomainInterface.chatQueryUseCases.fetchChats,
         enabled,
         select: (remoteChats) =>
             mergeChatSessions(
@@ -24,7 +24,7 @@ export const useChats = (enabled = true) => {
     });
 };
 
-export const useSaveChat = () => {
+export const useSaveChatMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -37,7 +37,11 @@ export const useSaveChat = () => {
             messages: Message[];
             title: string;
         }) => {
-            return chatUseCases.chatQueryUseCases.saveChat(id, messages, title);
+            return chatDomainInterface.chatQueryUseCases.saveChat(
+                id,
+                messages,
+                title,
+            );
         },
         onSuccess: async (savedChat) => {
             upsertSavedChatSession(queryClient, savedChat);
@@ -49,11 +53,11 @@ export const useSaveChat = () => {
     });
 };
 
-export const useDeleteChat = () => {
+export const useDeleteChatMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: chatUseCases.chatQueryUseCases.deleteChat,
+        mutationFn: chatDomainInterface.chatQueryUseCases.deleteChat,
         onSuccess: async (_, deletedId) => {
             removeChatSession(queryClient, deletedId);
             await queryClient.invalidateQueries({
@@ -63,7 +67,7 @@ export const useDeleteChat = () => {
     });
 };
 
-export const useRenameChat = () => {
+export const useRenameChatMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -74,7 +78,10 @@ export const useRenameChat = () => {
             id: string;
             newTitle: string;
         }) => {
-            return chatUseCases.chatQueryUseCases.renameChat(id, newTitle);
+            return chatDomainInterface.chatQueryUseCases.renameChat(
+                id,
+                newTitle,
+            );
         },
         onSuccess: async (_, { id, newTitle }) => {
             updateChatTitle(queryClient, id, newTitle);
@@ -85,10 +92,12 @@ export const useRenameChat = () => {
     });
 };
 
-export const useGenerateTitle = () => {
+export const useGenerateTitleMutation = () => {
     return useMutation({
         mutationFn: async (messages: Message[]) => {
-            return chatUseCases.chatQueryUseCases.generateTitle(messages);
+            return chatDomainInterface.chatQueryUseCases.generateTitle(
+                messages,
+            );
         },
     });
 };

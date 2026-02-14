@@ -1,15 +1,15 @@
-import { useUpdateProfile } from "../queries/useUpdateProfile";
-import { authUseCases } from "../interface/authUseCases";
+import { useUpdateProfileMutation } from "../queries/useUpdateProfile";
+import { authDomainInterface } from "../interface/AuthDomainInterface";
 
 export const useAuthActionsFlow = () => {
-    const updateProfileMutation = useUpdateProfile();
+    const updateProfileMutation = useUpdateProfileMutation();
 
     const handleUpdateProfile = (name: string, avatar: string) => {
         updateProfileMutation.mutate({ name, avatar });
     };
 
     const handleSignOut = async () => {
-        await authUseCases.signOut();
+        await authDomainInterface.signOut();
     };
 
     return {

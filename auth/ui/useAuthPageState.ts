@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { AuthMode } from "../types";
-import { authUseCases } from "../interface/authUseCases";
+import { authDomainInterface } from "../interface/AuthDomainInterface";
+
+const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error && error.message) {
+        return error.message;
+    }
+
+    return "认证失败";
+};
 
 export const useAuthPageState = (onLoginSuccess: () => void) => {
     const [mode, setMode] = useState<AuthMode>("signin");
@@ -17,16 +25,16 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
 
         try {
             if (mode === "signin") {
-                await authUseCases.signIn(email, password);
+                await authDomainInterface.signIn(email, password);
                 toast.success("欢迎回来！");
                 onLoginSuccess();
             } else if (mode === "register") {
-                await authUseCases.signUp(email, password);
+                await authDomainInterface.signUp(email, password);
                 setIsVerificationPending(true);
                 toast.success("账户创建成功！请检查您的邮箱完成验证。");
             }
-        } catch (error: any) {
-            toast.error(error.message || "认证失败");
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsLoading(false);
         }
@@ -35,9 +43,9 @@ export const useAuthPageState = (onLoginSuccess: () => void) => {
     const handleSocialLogin = async (provider: "google" | "github") => {
         setIsLoading(true);
         try {
-            await authUseCases.socialLogin(provider);
-        } catch (error: any) {
-            toast.error(error.message || "认证失败");
+            await authDomainInterface.socialLogin(provider);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsLoading(false);
         }

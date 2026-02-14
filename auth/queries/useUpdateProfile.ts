@@ -2,16 +2,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authKeys } from "./authKeys";
 import { UserProfile } from "../types";
-import { authUseCases } from "../interface/authUseCases";
+import { authDomainInterface } from "../interface/AuthDomainInterface";
 import type { UserUpdateData } from "../interface/AuthPort";
 import { DEFAULT_USER } from "../constants";
 
-export const useUpdateProfile = () => {
+export const useUpdateProfileMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async (data: UserUpdateData) => {
-            await authUseCases.updateUser(data);
+            await authDomainInterface.updateUser(data);
         },
         onMutate: async (data) => {
             await queryClient.cancelQueries({ queryKey: authKeys.profile() });

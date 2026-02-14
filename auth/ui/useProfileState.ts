@@ -31,41 +31,49 @@ export const useProfileState = (
         setIsEditing(false);
     };
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2,
-            },
-        },
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 24,
-            } as const,
-        },
-    };
-
-    return {
+    const state = {
         name,
-        setName,
         role: user.role,
         avatar,
-        setAvatar,
         isEditing,
+    };
+
+    const derived = {
+        containerVariants: {
+            hidden: { opacity: 0 },
+            visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.08 },
+            },
+        },
+        itemVariants: {
+            hidden: { opacity: 0, y: 10 },
+            visible: { opacity: 1, y: 0 },
+        },
+    };
+
+    const actions = {
+        setName,
+        setAvatar,
         setIsEditing,
         handleSave,
         handleCancel,
-        containerVariants,
-        itemVariants,
+    };
+
+    return {
+        state,
+        actions,
+        derived,
+        name: state.name,
+        setName: actions.setName,
+        role: state.role,
+        avatar: state.avatar,
+        setAvatar: actions.setAvatar,
+        isEditing: state.isEditing,
+        setIsEditing: actions.setIsEditing,
+        handleSave: actions.handleSave,
+        handleCancel: actions.handleCancel,
+        containerVariants: derived.containerVariants,
+        itemVariants: derived.itemVariants,
     };
 };

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { usePublishAssignmentFileState } from "../states/usePublishAssignmentFileState";
+import { usePublishAssignmentFlow } from "../flows/usePublishAssignmentFlow";
+import { usePublishAssignmentFormState } from "../states/usePublishAssignmentFormState";
 
 interface UsePublishAssignmentStateParams {
     onPublish: (
@@ -15,63 +17,53 @@ interface UsePublishAssignmentStateParams {
 export const usePublishAssignmentState = ({
     onPublish,
 }: UsePublishAssignmentStateParams) => {
-    const [assignmentName, setAssignmentName] = useState("");
-    const [selectedModule, setSelectedModule] = useState("");
-    const [dueDate, setDueDate] = useState("");
-    const [dueTime, setDueTime] = useState("");
-    const [instructions, setInstructions] = useState("");
-    const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-    const [aiGradingEnabled, setAiGradingEnabled] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleFileUpload = (file: File) => {
-        setAttachedFiles((prevFiles) => [...prevFiles, file]);
-    };
-
-    const handleRemoveFile = (index: number) => {
-        setAttachedFiles((prevFiles) =>
-            prevFiles.filter((_, itemIndex) => itemIndex !== index),
-        );
-    };
+    const form = usePublishAssignmentFormState();
+    const files = usePublishAssignmentFileState();
+    const flow = usePublishAssignmentFlow({ onPublish });
 
     const handlePublish = async () => {
-        if (!assignmentName.trim() || !selectedModule) {
-            return;
-        }
+        await flow.actions.handlePublish({
+            assignmentName: form.state.assignmentName,
+            selectedModule: form.state.selectedModule,
+            dueDate: form.state.dueDate,
+            dueTime: form.state.dueTime,
+            instructions: form.state.instructions,
+            attachedFiles: files.state.attachedFiles,
+            aiGradingEnabled: form.state.aiGradingEnabled,
+        });
+    };
 
-        try {
-            setIsLoading(true);
-            await onPublish(
-                assignmentName.trim(),
-                selectedModule,
-                dueDate,
-                dueTime,
-                instructions.trim(),
-                attachedFiles,
-                aiGradingEnabled,
-            );
-        } finally {
-            setIsLoading(false);
-        }
+    const state = {
+        ...form.state,
+        ...files.state,
+        ...flow.state,
+    };
+
+    const actions = {
+        ...form.actions,
+        ...files.actions,
+        handlePublish,
     };
 
     return {
-        assignmentName,
-        setAssignmentName,
-        selectedModule,
-        setSelectedModule,
-        dueDate,
-        setDueDate,
-        dueTime,
-        setDueTime,
-        instructions,
-        setInstructions,
-        attachedFiles,
-        aiGradingEnabled,
-        setAiGradingEnabled,
-        isLoading,
-        handleFileUpload,
-        handleRemoveFile,
-        handlePublish,
+        state,
+        actions,
+        assignmentName: state.assignmentName,
+        setAssignmentName: actions.setAssignmentName,
+        selectedModule: state.selectedModule,
+        setSelectedModule: actions.setSelectedModule,
+        dueDate: state.dueDate,
+        setDueDate: actions.setDueDate,
+        dueTime: state.dueTime,
+        setDueTime: actions.setDueTime,
+        instructions: state.instructions,
+        setInstructions: actions.setInstructions,
+        attachedFiles: state.attachedFiles,
+        aiGradingEnabled: state.aiGradingEnabled,
+        setAiGradingEnabled: actions.setAiGradingEnabled,
+        isLoading: state.isLoading,
+        handleFileUpload: actions.handleFileUpload,
+        handleRemoveFile: actions.handleRemoveFile,
+        handlePublish: actions.handlePublish,
     };
 };

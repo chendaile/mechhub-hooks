@@ -1,5 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useSessionItemState } from "./useSessionItemState";
 
 interface UseSessionItemUiStateParams {
     label: string;
@@ -12,90 +11,25 @@ export const useSessionItemUiState = ({
     onRename,
     onDelete,
 }: UseSessionItemUiStateParams) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [editTitle, setEditTitle] = useState(label);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (isEditing && inputRef.current) {
-            inputRef.current.focus();
-            inputRef.current.select();
-        }
-    }, [isEditing]);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node)
-            ) {
-                setIsMenuOpen(false);
-            }
-        };
-
-        if (isMenuOpen) {
-            document.addEventListener("mousedown", handleClickOutside);
-            return () =>
-                document.removeEventListener("mousedown", handleClickOutside);
-        }
-    }, [isMenuOpen]);
-
-    const handleSaveRename = async () => {
-        if (!onRename || editTitle.trim() === "" || editTitle === label) {
-            setIsEditing(false);
-            setEditTitle(label);
-            return;
-        }
-
-        const success = await onRename(editTitle.trim());
-        if (success) {
-            setIsEditing(false);
-            toast.success("重命名成功");
-        } else {
-            setEditTitle(label);
-            setIsEditing(false);
-        }
-    };
-
-    const handleCancelRename = () => {
-        setIsEditing(false);
-        setEditTitle(label);
-    };
-
-    const handleStartEdit = () => {
-        if (!onRename) return;
-        setIsMenuOpen(false);
-        setIsEditing(true);
-    };
-
-    const handleToggleMenu = () => {
-        setIsMenuOpen((prev) => !prev);
-    };
-
-    const handleDelete = () => {
-        setIsMenuOpen(false);
-        onDelete?.();
-    };
-
-    const closeMenu = () => {
-        setIsMenuOpen(false);
-    };
+    const { state, actions } = useSessionItemState({
+        label,
+        onRename,
+        onDelete,
+    });
 
     return {
-        isEditing,
-        editTitle,
-        isMenuOpen,
-        inputRef,
-        menuRef,
-        handleSaveRename,
-        handleCancelRename,
-        handleStartEdit,
-        handleToggleMenu,
-        handleDelete,
-        closeMenu,
-        setEditTitle,
-        canRename: Boolean(onRename),
+        isEditing: state.isEditing,
+        editTitle: state.editTitle,
+        isMenuOpen: state.isMenuOpen,
+        inputRef: state.inputRef,
+        menuRef: state.menuRef,
+        handleSaveRename: actions.handleSaveRename,
+        handleCancelRename: actions.handleCancelRename,
+        handleStartEdit: actions.handleStartEdit,
+        handleToggleMenu: actions.handleToggleMenu,
+        handleDelete: actions.handleDelete,
+        closeMenu: actions.closeMenu,
+        setEditTitle: actions.setEditTitle,
+        canRename: state.canRename,
     };
 };
