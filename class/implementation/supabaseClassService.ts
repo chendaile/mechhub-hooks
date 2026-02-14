@@ -11,9 +11,11 @@ export {
 } from "../services/classManagementService";
 export {
     createGroupThread,
+    deleteClassThread,
     getClassThreadMessages,
     listClassThreads,
     postClassMessage,
+    renameClassThread,
     shareGradeResultToClass,
     sharePrivateChatToClass,
 } from "../services/classThreadService";

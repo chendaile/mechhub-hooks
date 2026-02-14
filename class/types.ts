@@ -12,6 +12,7 @@ export type {
     ClassThreadMessageRole,
     ClassThreadMessage,
     PostClassMessageResult,
+    DeleteClassThreadResult,
 } from "./model/thread";
 export type {
     CreateClassPayload,
@@ -20,6 +21,8 @@ export type {
     AssignTeacherPayload,
     RemoveStudentPayload,
     PostClassMessagePayload,
+    RenameClassThreadPayload,
+    DeleteClassThreadPayload,
     SharePrivateChatPayload,
     ShareGradeResultPayload,
 } from "./model/payload";

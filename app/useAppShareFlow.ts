@@ -1,40 +1,54 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-    useShareGradeResultToClassMutation,
-    useSharePrivateChatToClassMutation,
-} from "../class/public";
-import type { UserProfile } from "../auth/types";
-import { APP_ASSIGNMENT_FIXTURES } from "./model/appShellModel";
+import { useSharePrivateChatToClassMutation } from "../class/public";
 import type { ShareIntent } from "./types/share";
 
+interface ShareThreadGroup {
+    classId: string;
+    className: string;
+    threads: Array<{
+        id: string;
+        title: string;
+        threadType: "group" | "shared_chat";
+    }>;
+}
+
 interface UseAppShareFlowProps {
-    classOptionsLength: number;
+    classThreadGroups: ShareThreadGroup[];
     currentSessionId: string | null;
-    userProfile: UserProfile | null;
 }
 
 export const useAppShareFlow = ({
-    classOptionsLength,
+    classThreadGroups,
     currentSessionId,
-    userProfile,
 }: UseAppShareFlowProps) => {
     const [shareIntent, setShareIntent] = useState<ShareIntent | null>(null);
 
     const sharePrivateChatToClassMutation =
         useSharePrivateChatToClassMutation();
-    const shareGradeResultToClassMutation =
-        useShareGradeResultToClassMutation();
+
+    const shareableThreadCount = useMemo(
+        () =>
+            classThreadGroups.reduce(
+                (count, group) =>
+                    count +
+                    group.threads.filter(
+                        (thread) => thread.threadType === "group",
+                    ).length,
+                0,
+            ),
+        [classThreadGroups],
+    );
 
     const openSharePicker = useCallback(
         (intent: ShareIntent) => {
-            if (classOptionsLength === 0) {
-                toast.error("Open Class Hub and join a class first.");
+            if (shareableThreadCount === 0) {
+                toast.error("无可分享线程，请联系老师创建。");
                 return;
             }
             setShareIntent(intent);
         },
-        [classOptionsLength],
+        [shareableThreadCount],
     );
 
     const handleShareChatMessageToClass = useCallback(
@@ -51,12 +65,8 @@ export const useAppShareFlow = ({
         [openSharePicker],
     );
 
-    const handleShareFeedbackToClass = useCallback(() => {
-        openSharePicker({ kind: "gradeFeedback" });
-    }, [openSharePicker]);
-
-    const handleConfirmClassShare = useCallback(
-        async (classId: string) => {
+    const handleConfirmThreadShare = useCallback(
+        async (classId: string, threadId: string) => {
             if (!shareIntent) {
                 return;
             }
@@ -71,51 +81,24 @@ export const useAppShareFlow = ({
                     }
                     await sharePrivateChatToClassMutation.mutateAsync({
                         classId,
+                        threadId,
                         chatId: currentSessionId,
                         messageIds: [shareIntent.messageId],
                     });
-                } else if (shareIntent.kind === "chatSession") {
+                } else {
                     await sharePrivateChatToClassMutation.mutateAsync({
                         classId,
+                        threadId,
                         chatId: shareIntent.sessionId,
-                    });
-                } else {
-                    const safeName = userProfile?.name ?? "Unknown Student";
-
-                    await shareGradeResultToClassMutation.mutateAsync({
-                        classId,
-                        gradePayload: {
-                            assignmentTitle:
-                                APP_ASSIGNMENT_FIXTURES.assignmentTitle,
-                            overallScore:
-                                APP_ASSIGNMENT_FIXTURES.viewFeedback
-                                    .overallScore,
-                            maxScore:
-                                APP_ASSIGNMENT_FIXTURES.viewFeedback.maxScore,
-                            submittedDate:
-                                APP_ASSIGNMENT_FIXTURES.viewFeedback
-                                    .submittedDate,
-                            teacherName:
-                                APP_ASSIGNMENT_FIXTURES.viewFeedback
-                                    .teacherName,
-                            studentName: safeName,
-                            sharedAt: new Date().toISOString(),
-                        },
                     });
                 }
                 setShareIntent(null);
-                toast.success("Shared successfully to class.");
+                toast.success("Shared successfully to class thread.");
             } catch {
-                // error handled by mutation or global handler usually, but added empty catch to satisfy lint/flow
+                // error handled by mutation
             }
         },
-        [
-            currentSessionId,
-            shareIntent,
-            shareGradeResultToClassMutation,
-            sharePrivateChatToClassMutation,
-            userProfile,
-        ],
+        [currentSessionId, shareIntent, sharePrivateChatToClassMutation],
     );
 
     return {
@@ -123,10 +106,7 @@ export const useAppShareFlow = ({
         setShareIntent,
         handleShareChatMessageToClass,
         handleShareChatSessionToClass,
-        handleShareFeedbackToClass,
-        handleConfirmClassShare,
-        isSharing:
-            sharePrivateChatToClassMutation.isPending ||
-            shareGradeResultToClassMutation.isPending,
+        handleConfirmThreadShare,
+        isSharing: sharePrivateChatToClassMutation.isPending,
     };
 };

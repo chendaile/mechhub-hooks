@@ -11,9 +11,11 @@ import {
 } from "../services/classManagementService";
 import {
     createGroupThread,
+    deleteClassThread,
     getClassThreadMessages,
     listClassThreads,
     postClassMessage,
+    renameClassThread,
     shareGradeResultToClass,
     sharePrivateChatToClass,
 } from "../services/classThreadService";
@@ -32,6 +34,8 @@ export interface ClassDomainInterface {
     joinClassByInviteCode: typeof joinClassByInviteCode;
     removeStudentFromClass: typeof removeStudentFromClass;
     createGroupThread: typeof createGroupThread;
+    renameClassThread: typeof renameClassThread;
+    deleteClassThread: typeof deleteClassThread;
     postClassMessage: typeof postClassMessage;
     sharePrivateChatToClass: typeof sharePrivateChatToClass;
     shareGradeResultToClass: typeof shareGradeResultToClass;
@@ -51,6 +55,8 @@ export const createClassDomainInterface = (): ClassDomainInterface => ({
     joinClassByInviteCode,
     removeStudentFromClass,
     createGroupThread,
+    renameClassThread,
+    deleteClassThread,
     postClassMessage,
     sharePrivateChatToClass,
     shareGradeResultToClass,

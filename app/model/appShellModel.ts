@@ -203,16 +203,12 @@ export const buildSharePickerDescription = (
     shareIntent: ShareIntent | null,
 ) => {
     if (!shareIntent) {
-        return "Select a class to share.";
+        return "Select a class thread to share.";
     }
 
     if (shareIntent.kind === "chatMessage") {
-        return "Select a class to share this message.";
+        return "Select a group thread to share this message.";
     }
 
-    if (shareIntent.kind === "chatSession") {
-        return "Select a class to share this private session.";
-    }
-
-    return "Select a class to share this grade feedback.";
+    return "Select a group thread to share this private session.";
 };

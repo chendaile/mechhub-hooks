@@ -1,8 +1,11 @@
 import type {
     ClassThread,
     ClassThreadMessage,
+    DeleteClassThreadPayload,
+    DeleteClassThreadResult,
     PostClassMessagePayload,
     PostClassMessageResult,
+    RenameClassThreadPayload,
     ShareGradeResultPayload,
     SharePrivateChatPayload,
 } from "../types";
@@ -36,6 +39,45 @@ export const createGroupThread = async (
     });
 
     return normalizeClassThread(result.thread);
+};
+
+export const renameClassThread = async (
+    payload: RenameClassThreadPayload,
+): Promise<ClassThread> => {
+    const result = await invokeClassChat<{ thread?: unknown }>({
+        action: "rename_group_thread",
+        class_id: payload.classId,
+        thread_id: payload.threadId,
+        title: payload.title,
+    });
+
+    return normalizeClassThread(result.thread);
+};
+
+export const deleteClassThread = async (
+    payload: DeleteClassThreadPayload,
+): Promise<DeleteClassThreadResult> => {
+    const result = await invokeClassChat<{
+        success?: unknown;
+        class_id?: unknown;
+        thread_id?: unknown;
+    }>({
+        action: "delete_group_thread",
+        class_id: payload.classId,
+        thread_id: payload.threadId,
+    });
+
+    return {
+        success: result.success === true,
+        classId:
+            typeof result.class_id === "string"
+                ? result.class_id
+                : payload.classId,
+        threadId:
+            typeof result.thread_id === "string"
+                ? result.thread_id
+                : payload.threadId,
+    };
 };
 
 export const getClassThreadMessages = async (
@@ -81,6 +123,7 @@ export const sharePrivateChatToClass = async (
     const result = await invokeClassChat<{ thread?: unknown }>({
         action: "share_private_chat",
         class_id: payload.classId,
+        thread_id: payload.threadId,
         chat_id: payload.chatId,
         message_ids: payload.messageIds ?? [],
     });

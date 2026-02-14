@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import type { SubmitMessage } from "../chat/types";
 import {
     useClassThreadMessagesQuery,
     usePostClassMessageMutation,
@@ -10,7 +12,11 @@ const deriveClassMessageContent = (content: Record<string, unknown>) => {
     }
 
     if (content.kind === "shared_chat") {
-        return "Shared a private chat session.";
+        const sourceTitle =
+            typeof content.sourceTitle === "string"
+                ? content.sourceTitle
+                : "未命名会话";
+        return `分享了私聊会话：${sourceTitle}`;
     }
 
     if (content.kind === "shared_grade") {
@@ -24,8 +30,10 @@ const deriveClassMessageContent = (content: Record<string, unknown>) => {
     }
 };
 
+const hasAttachments = (payload: SubmitMessage) =>
+    Boolean(payload.imageUrls?.length || payload.fileAttachments?.length);
+
 export const useClassThreadChatState = (threadId: string) => {
-    const [inputValue, setInputValue] = useState("");
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
 
     const threadMessagesQuery = useClassThreadMessagesQuery(
@@ -51,35 +59,56 @@ export const useClassThreadChatState = (threadId: string) => {
         });
     }, [sortedMessages.length]);
 
-    const handleInputChange = (value: string) => {
-        setInputValue(value);
-    };
+    const handleSendDraft = async (payload: SubmitMessage) => {
+        const text = payload.text.trim();
+        const mentionsAi = /@ai\b/i.test(text);
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const text = inputValue.trim();
         if (!text) {
+            toast.warning("请输入消息文本。");
+            return;
+        }
+
+        if (!mentionsAi) {
+            if (hasAttachments(payload)) {
+                toast.warning("未使用 @ai 时不支持附件。");
+                return;
+            }
+
+            try {
+                await postClassMessageMutation.mutateAsync({
+                    threadId,
+                    content: { text },
+                });
+            } catch {}
+            return;
+        }
+
+        if (payload.mode === "correct" && !payload.imageUrls?.length) {
+            toast.warning("@ai 批改模式需要至少上传一张图片。");
             return;
         }
 
         try {
             await postClassMessageMutation.mutateAsync({
                 threadId,
-                content: { text },
+                content: {
+                    text,
+                    aiMode: payload.mode,
+                    aiModel: payload.model,
+                    imageUrls: payload.imageUrls ?? [],
+                    fileAttachments: payload.fileAttachments ?? [],
+                },
             });
-            setInputValue("");
         } catch {}
     };
 
     return {
         state: {
-            inputValue,
             messages: sortedMessages,
             scrollAnchorRef,
         },
         actions: {
-            handleInputChange,
-            handleSubmit,
+            handleSendDraft,
         },
         derived: {
             renderMessageContent: deriveClassMessageContent,
@@ -89,12 +118,10 @@ export const useClassThreadChatState = (threadId: string) => {
             isLoadingMessages: threadMessagesQuery.isLoading,
             isFetchingMessages: threadMessagesQuery.isFetching,
         },
-        inputValue,
-        setInputValue: handleInputChange,
         sortedMessages,
         scrollAnchorRef,
         isSending: postClassMessageMutation.isPending,
-        handleSubmit,
+        handleSendDraft,
         renderMessageContent: deriveClassMessageContent,
     };
 };

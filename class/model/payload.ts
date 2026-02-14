@@ -29,8 +29,20 @@ export interface PostClassMessagePayload {
     content: Record<string, unknown> | string;
 }
 
+export interface RenameClassThreadPayload {
+    classId: string;
+    threadId: string;
+    title: string;
+}
+
+export interface DeleteClassThreadPayload {
+    classId: string;
+    threadId: string;
+}
+
 export interface SharePrivateChatPayload {
     classId: string;
+    threadId: string;
     chatId: string;
     messageIds?: string[];
 }

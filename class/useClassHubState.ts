@@ -28,12 +28,23 @@ interface UseClassHubStateProps {
         threadId: string;
         threadTitle: string;
     }) => void;
+    onRenameClassThread?: (
+        classId: string,
+        threadId: string,
+        title: string,
+    ) => Promise<boolean>;
+    onDeleteClassThread?: (
+        classId: string,
+        threadId: string,
+    ) => Promise<boolean>;
 }
 
 export const useClassHubState = ({
     selectedClassId,
     onSelectedClassIdChange,
     onEnterClassChat,
+    onRenameClassThread,
+    onDeleteClassThread,
 }: UseClassHubStateProps) => {
     const [screen, setScreen] = useState<HubScreen>("collection");
 
@@ -79,6 +90,11 @@ export const useClassHubState = ({
     const selectedClass = classOptions.find(
         (item) => item.id === selectedClassId,
     );
+    const canCreateThread =
+        !!selectedClassId &&
+        (!!classContextQuery.data?.isAdmin ||
+            selectedClass?.role === "teacher");
+    const canManageThreads = canCreateThread;
     const isDashboardEnabled = screen === "dashboard" && !!selectedClassId;
 
     const classMembersQuery = useClassMembersQuery(
@@ -146,17 +162,6 @@ export const useClassHubState = ({
         });
     };
 
-    const handleOpenGeneralChat = () => {
-        const groupThread =
-            threads.find((thread) => thread.threadType === "group") ??
-            threads[0];
-        if (!groupThread) {
-            toast.error("当前班级还没有可用话题，请先创建话题。");
-            return;
-        }
-        openThreadChat(groupThread.id);
-    };
-
     const handleCreateClass = async () => {
         if (!createClassName.trim()) {
             toast.error("请输入班级名称");
@@ -194,7 +199,8 @@ export const useClassHubState = ({
     };
 
     const handleCreateThread = async () => {
-        if (!selectedClassId) {
+        if (!selectedClassId || !canCreateThread) {
+            toast.error("只有教师或管理员可以创建话题。");
             return;
         }
 
@@ -205,6 +211,61 @@ export const useClassHubState = ({
             });
             openThreadChat(newThread.id, newThread.title);
         } catch {}
+    };
+
+    const handleRenameThread = async (threadId: string) => {
+        if (!selectedClassId || !canManageThreads || !onRenameClassThread) {
+            return;
+        }
+
+        const thread = threads.find((item) => item.id === threadId);
+        if (!thread || thread.threadType !== "group") {
+            toast.error("仅群聊话题支持重命名。");
+            return;
+        }
+
+        const nextTitle = window.prompt("请输入新的话题名称", thread.title);
+        if (nextTitle === null) {
+            return;
+        }
+
+        const normalizedTitle = nextTitle.trim();
+        if (!normalizedTitle) {
+            toast.error("请输入有效的话题名称。");
+            return;
+        }
+
+        if (normalizedTitle.length > 60) {
+            toast.error("话题名称最多 60 个字符。");
+            return;
+        }
+
+        if (normalizedTitle === thread.title) {
+            return;
+        }
+
+        await onRenameClassThread(selectedClassId, threadId, normalizedTitle);
+    };
+
+    const handleDeleteThread = async (threadId: string) => {
+        if (!selectedClassId || !canManageThreads || !onDeleteClassThread) {
+            return;
+        }
+
+        const thread = threads.find((item) => item.id === threadId);
+        if (!thread || thread.threadType !== "group") {
+            toast.error("仅群聊话题支持删除。");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `确认删除话题「${thread.title}」吗？该操作不可恢复。`,
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        await onDeleteClassThread(selectedClassId, threadId);
     };
 
     return {
@@ -228,8 +289,11 @@ export const useClassHubState = ({
         students,
         threads,
         handleCreateThread,
+        canCreateThread,
+        canManageThreads,
+        handleRenameThread,
+        handleDeleteThread,
         isCreatingThread: createGroupThreadMutation.isPending,
-        handleOpenGeneralChat,
         openThreadChat,
         inviteCodeDisplayText,
     };

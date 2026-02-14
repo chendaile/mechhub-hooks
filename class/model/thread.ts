@@ -32,3 +32,9 @@ export interface PostClassMessageResult {
     message: ClassThreadMessage;
     aiMessage?: ClassThreadMessage | null;
 }
+
+export interface DeleteClassThreadResult {
+    success: boolean;
+    classId: string;
+    threadId: string;
+}
