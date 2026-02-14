@@ -7,6 +7,7 @@
 - `src/hooks/index.ts` is the only cross-domain entrypoint (`export * from "./<domain>/public"`).
 - `src/hooks/<domain>/public.ts` only exports externally consumed contracts.
 - `src/app` must import from `@hooks` only, never `@hooks/<domain>/...`.
+- App orchestration logic must live in hooks (`useAppShellState` as the app entry orchestration hook), while `src/app` presenters stay as assembly-only consumers.
 - Service domains (`auth`, `authz`, `chat`, `class`) must provide one aggregate `interface/*DomainInterface.ts`.
 - Domain `queries` and `flow` should depend on domain interfaces, not direct service implementation files.
 - Query/Mutation hooks use explicit suffixes: `*Query` / `*Mutation`.

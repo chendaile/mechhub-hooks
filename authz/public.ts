@@ -14,3 +14,4 @@ export type {
     PermissionKey,
 } from "./types";
 export { PERMISSION_KEYS } from "./types";
+export { usePermissionsConsoleState } from "./usePermissionsConsoleState";

@@ -13,6 +13,8 @@ export {
     useShareGradeResultToClassMutation,
     useSharePrivateChatToClassMutation,
 } from "./queries/useClassQueries";
+export { useClassHubState } from "./useClassHubState";
+export { useClassThreadChatState } from "./useClassThreadChatState";
 export type {
     AssignTeacherPayload,
     ClassMemberSummary,
