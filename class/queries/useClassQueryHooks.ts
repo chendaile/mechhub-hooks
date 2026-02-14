@@ -5,47 +5,64 @@ import { classKeys } from "./classKeys";
 
 export const useMyClassContextQuery = () => {
     const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useQuery({
-        queryKey: classKeys.context(),
+        queryKey: classKeys.context(viewerUserId),
         queryFn: classDomainInterface.getMyClassContext,
         enabled: !!session,
         staleTime: 60_000,
     });
 };
 
-export const useClassMembersQuery = (classId?: string, enabled = true) =>
-    useQuery({
-        queryKey: classKeys.members(classId ?? "unknown"),
+export const useClassMembersQuery = (classId?: string, enabled = true) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: classKeys.members(viewerUserId, classId ?? "unknown"),
         queryFn: () => classDomainInterface.listClassMembers(classId ?? ""),
-        enabled: enabled && !!classId,
+        enabled: enabled && !!classId && !!session,
         staleTime: 30_000,
     });
+};
 
-export const useInviteCodesQuery = (classId?: string, enabled = true) =>
-    useQuery({
-        queryKey: classKeys.inviteCodes(classId ?? "unknown"),
+export const useInviteCodesQuery = (classId?: string, enabled = true) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: classKeys.inviteCodes(viewerUserId, classId ?? "unknown"),
         queryFn: () => classDomainInterface.listInviteCodes(classId ?? ""),
-        enabled: enabled && !!classId,
+        enabled: enabled && !!classId && !!session,
         staleTime: 15_000,
     });
+};
 
-export const useClassThreadsQuery = (classId?: string, enabled = true) =>
-    useQuery({
-        queryKey: classKeys.threads(classId ?? "unknown"),
+export const useClassThreadsQuery = (classId?: string, enabled = true) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: classKeys.threads(viewerUserId, classId ?? "unknown"),
         queryFn: () => classDomainInterface.listClassThreads(classId ?? ""),
-        enabled: enabled && !!classId,
+        enabled: enabled && !!classId && !!session,
         staleTime: 5_000,
     });
+};
 
 export const useClassThreadMessagesQuery = (
     threadId?: string,
     enabled = true,
-) =>
-    useQuery({
-        queryKey: classKeys.threadMessages(threadId ?? "unknown"),
+) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: classKeys.threadMessages(viewerUserId, threadId ?? "unknown"),
         queryFn: () =>
             classDomainInterface.getClassThreadMessages(threadId ?? ""),
-        enabled: enabled && !!threadId,
+        enabled: enabled && !!threadId && !!session,
         staleTime: 2_000,
     });
+};

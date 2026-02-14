@@ -8,6 +8,8 @@ export const useChatSessionsFlow = (
     session: Session | null,
     isEnabled = true,
 ) => {
+    const viewerUserId = session?.user.id ?? null;
+
     const {
         chatSessions,
         isLoadingSessions,
@@ -22,7 +24,7 @@ export const useChatSessionsFlow = (
         handleSelectSession,
         handleStartNewQuest: handleStartNewQuestSession,
         handleClearCurrentSessionSelection,
-    } = useSessionSelectionState({ chatSessions });
+    } = useSessionSelectionState({ chatSessions, viewerUserId });
 
     const { chatMode, setChatMode, resetChatMode } = useChatModeState();
 

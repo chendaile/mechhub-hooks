@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Message, ChatSession } from "../types";
 import { chatDomainInterface } from "../interface/ChatDomainInterface";
+import { useSessionQuery } from "../../auth/queries/useSession";
 import {
     mergeChatSessions,
     removeChatSession,
@@ -11,14 +12,18 @@ import { chatKeys } from "./chatKeys";
 
 export const useChatsQuery = (enabled = true) => {
     const queryClient = useQueryClient();
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useQuery({
-        queryKey: chatKeys.lists(),
+        queryKey: chatKeys.lists(viewerUserId),
         queryFn: chatDomainInterface.chatQueryUseCases.fetchChats,
         enabled,
         select: (remoteChats) =>
             mergeChatSessions(
-                queryClient.getQueryData<ChatSession[]>(chatKeys.lists()) || [],
+                queryClient.getQueryData<ChatSession[]>(
+                    chatKeys.lists(viewerUserId),
+                ) || [],
                 remoteChats || [],
             ),
     });
@@ -26,6 +31,8 @@ export const useChatsQuery = (enabled = true) => {
 
 export const useSaveChatMutation = () => {
     const queryClient = useQueryClient();
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useMutation({
         mutationFn: async ({
@@ -44,9 +51,9 @@ export const useSaveChatMutation = () => {
             );
         },
         onSuccess: async (savedChat) => {
-            upsertSavedChatSession(queryClient, savedChat);
+            upsertSavedChatSession(queryClient, viewerUserId, savedChat);
             await queryClient.invalidateQueries({
-                queryKey: chatKeys.lists(),
+                queryKey: chatKeys.lists(viewerUserId),
                 refetchType: "inactive",
             });
         },
@@ -55,13 +62,15 @@ export const useSaveChatMutation = () => {
 
 export const useDeleteChatMutation = () => {
     const queryClient = useQueryClient();
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useMutation({
         mutationFn: chatDomainInterface.chatQueryUseCases.deleteChat,
         onSuccess: async (_, deletedId) => {
-            removeChatSession(queryClient, deletedId);
+            removeChatSession(queryClient, viewerUserId, deletedId);
             await queryClient.invalidateQueries({
-                queryKey: chatKeys.lists(),
+                queryKey: chatKeys.lists(viewerUserId),
             });
         },
     });
@@ -69,6 +78,8 @@ export const useDeleteChatMutation = () => {
 
 export const useRenameChatMutation = () => {
     const queryClient = useQueryClient();
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useMutation({
         mutationFn: async ({
@@ -84,9 +95,9 @@ export const useRenameChatMutation = () => {
             );
         },
         onSuccess: async (_, { id, newTitle }) => {
-            updateChatTitle(queryClient, id, newTitle);
+            updateChatTitle(queryClient, viewerUserId, id, newTitle);
             await queryClient.invalidateQueries({
-                queryKey: chatKeys.lists(),
+                queryKey: chatKeys.lists(viewerUserId),
             });
         },
     });

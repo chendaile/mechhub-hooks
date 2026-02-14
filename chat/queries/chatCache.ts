@@ -2,8 +2,11 @@ import { QueryClient } from "@tanstack/react-query";
 import { Message, ChatSession } from "../types";
 import { chatKeys } from "./chatKeys";
 
-const getChatList = (queryClient: QueryClient): ChatSession[] =>
-    queryClient.getQueryData<ChatSession[]>(chatKeys.lists()) || [];
+const getChatList = (
+    queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
+): ChatSession[] =>
+    queryClient.getQueryData<ChatSession[]>(chatKeys.lists(viewerUserId)) || [];
 
 const mergeMessages = (local: Message[], remote: Message[]) => {
     if (!local.length) return remote;
@@ -71,52 +74,64 @@ export const mergeChatSessions = (
 
 export const findChatById = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     sessionId: string,
 ): ChatSession | undefined => {
-    return getChatList(queryClient).find((session) => session.id === sessionId);
+    return getChatList(queryClient, viewerUserId).find(
+        (session) => session.id === sessionId,
+    );
 };
 
 export const prependChatSession = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     session: ChatSession,
 ) => {
-    queryClient.setQueryData<ChatSession[]>(chatKeys.lists(), (old) => [
-        session,
-        ...(old || []),
-    ]);
+    queryClient.setQueryData<ChatSession[]>(
+        chatKeys.lists(viewerUserId),
+        (old) => [session, ...(old || [])],
+    );
 };
 
 export const removeChatSession = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     sessionId: string,
 ) => {
     queryClient.setQueryData<ChatSession[]>(
-        chatKeys.lists(),
+        chatKeys.lists(viewerUserId),
         (old) => old?.filter((session) => session.id !== sessionId) || [],
     );
 };
 
 export const upsertSavedChatSession = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     savedChat: ChatSession,
 ) => {
-    queryClient.setQueryData<ChatSession[]>(chatKeys.lists(), (old) => {
-        if (!old) return [savedChat];
+    queryClient.setQueryData<ChatSession[]>(
+        chatKeys.lists(viewerUserId),
+        (old) => {
+            if (!old) return [savedChat];
 
-        const filtered = old.filter((session) => session.id !== savedChat.id);
-        return [savedChat, ...filtered].sort(
-            (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0),
-        );
-    });
+            const filtered = old.filter(
+                (session) => session.id !== savedChat.id,
+            );
+            return [savedChat, ...filtered].sort(
+                (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0),
+            );
+        },
+    );
 };
 
 export const updateChatTitle = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     sessionId: string,
     title: string,
 ) => {
     queryClient.setQueryData<ChatSession[]>(
-        chatKeys.lists(),
+        chatKeys.lists(viewerUserId),
         (old) =>
             old?.map((session) =>
                 session.id === sessionId ? { ...session, title } : session,
@@ -126,11 +141,12 @@ export const updateChatTitle = (
 
 export const setChatTitleGenerating = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     sessionId: string,
     isGeneratingTitle: boolean,
 ) => {
     queryClient.setQueryData<ChatSession[]>(
-        chatKeys.lists(),
+        chatKeys.lists(viewerUserId),
         (old) =>
             old?.map((session) =>
                 session.id === sessionId
@@ -142,20 +158,24 @@ export const setChatTitleGenerating = (
 
 export const updateChatMessages = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
     sessionId: string,
     updater: (messages: Message[]) => Message[],
 ) => {
-    queryClient.setQueryData<ChatSession[]>(chatKeys.lists(), (old) => {
-        if (!old) return [];
+    queryClient.setQueryData<ChatSession[]>(
+        chatKeys.lists(viewerUserId),
+        (old) => {
+            if (!old) return [];
 
-        return old.map((session) => {
-            if (session.id !== sessionId) return session;
+            return old.map((session) => {
+                if (session.id !== sessionId) return session;
 
-            return {
-                ...session,
-                messages: updater(session.messages || []),
-                updatedAt: Date.now(),
-            };
-        });
-    });
+                return {
+                    ...session,
+                    messages: updater(session.messages || []),
+                    updatedAt: Date.now(),
+                };
+            });
+        },
+    );
 };

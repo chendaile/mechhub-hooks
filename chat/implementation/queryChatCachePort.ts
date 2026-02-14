@@ -11,14 +11,23 @@ import {
 
 export const createQueryChatCachePort = (
     queryClient: QueryClient,
+    viewerUserId: string | null | undefined,
 ): ChatCachePort => ({
-    findChatById: (sessionId) => findChatById(queryClient, sessionId),
-    prependChatSession: (session) => prependChatSession(queryClient, session),
-    removeChatSession: (sessionId) => removeChatSession(queryClient, sessionId),
+    findChatById: (sessionId) =>
+        findChatById(queryClient, viewerUserId, sessionId),
+    prependChatSession: (session) =>
+        prependChatSession(queryClient, viewerUserId, session),
+    removeChatSession: (sessionId) =>
+        removeChatSession(queryClient, viewerUserId, sessionId),
     updateChatTitle: (sessionId, title) =>
-        updateChatTitle(queryClient, sessionId, title),
+        updateChatTitle(queryClient, viewerUserId, sessionId, title),
     setChatTitleGenerating: (sessionId, isGeneratingTitle) =>
-        setChatTitleGenerating(queryClient, sessionId, isGeneratingTitle),
+        setChatTitleGenerating(
+            queryClient,
+            viewerUserId,
+            sessionId,
+            isGeneratingTitle,
+        ),
     updateChatMessages: (sessionId, updater) =>
-        updateChatMessages(queryClient, sessionId, updater),
+        updateChatMessages(queryClient, viewerUserId, sessionId, updater),
 });

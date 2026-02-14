@@ -7,9 +7,10 @@ import { hasPermission } from "../utils/permissionPredicates";
 
 export const useMyAuthorizationQuery = () => {
     const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useQuery({
-        queryKey: authzKeys.my(),
+        queryKey: authzKeys.my(viewerUserId),
         queryFn: authzDomainInterface.getMyAuthorization,
         enabled: !!session,
         staleTime: 60_000,
@@ -33,28 +34,39 @@ export const useAdminUserSearchMutation = () =>
 export const useAdminUserAccessQuery = (
     targetUserId?: string,
     enabled = true,
-) =>
-    useQuery({
-        queryKey: authzKeys.adminUserAccess(targetUserId ?? "unknown"),
+) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: authzKeys.adminUserAccess(
+            viewerUserId,
+            targetUserId ?? "unknown",
+        ),
         queryFn: () =>
             authzDomainInterface.getAdminUserAccess(targetUserId ?? ""),
-        enabled: enabled && !!targetUserId,
+        enabled: enabled && !!targetUserId && !!session,
         retry: false,
         staleTime: 30_000,
     });
+};
 
 export const useUpsertUserAccessMutation = () => {
     const queryClient = useQueryClient();
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
 
     return useMutation({
         mutationFn: (payload: UpsertUserAccessPayload) =>
             authzDomainInterface.upsertAdminUserAccess(payload),
         onSuccess: (snapshot) => {
             queryClient.setQueryData(
-                authzKeys.adminUserAccess(snapshot.userId),
+                authzKeys.adminUserAccess(viewerUserId, snapshot.userId),
                 snapshot,
             );
-            queryClient.invalidateQueries({ queryKey: authzKeys.my() });
+            queryClient.invalidateQueries({
+                queryKey: authzKeys.my(viewerUserId),
+            });
         },
     });
 };

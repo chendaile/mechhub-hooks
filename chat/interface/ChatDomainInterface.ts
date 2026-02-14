@@ -13,7 +13,10 @@ export interface ChatDomainInterface {
     chatQueryUseCases: ChatQueryUseCases;
     aiGateway: AIGatewayPort;
     storagePort: StoragePort;
-    createChatCachePort(queryClient: QueryClient): ChatCachePort;
+    createChatCachePort(
+        queryClient: QueryClient,
+        viewerUserId: string | null | undefined,
+    ): ChatCachePort;
 }
 
 export const createChatDomainInterface = (): ChatDomainInterface => {
@@ -25,8 +28,8 @@ export const createChatDomainInterface = (): ChatDomainInterface => {
         chatQueryUseCases: createChatQueryUseCases(chatRepository, aiGateway),
         aiGateway,
         storagePort,
-        createChatCachePort: (queryClient) =>
-            createQueryChatCachePort(queryClient),
+        createChatCachePort: (queryClient, viewerUserId) =>
+            createQueryChatCachePort(queryClient, viewerUserId),
     };
 };
 

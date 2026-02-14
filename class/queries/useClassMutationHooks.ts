@@ -1,12 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSessionQuery } from "../../auth/queries/useSession";
 import { classDomainInterface } from "../interface/ClassDomainInterface";
 import type {
     AssignTeacherPayload,
     CreateClassPayload,
     CreateInviteCodePayload,
+    DeleteClassThreadPayload,
     JoinClassByCodePayload,
     PostClassMessagePayload,
+    RenameClassThreadPayload,
     RemoveStudentPayload,
     ShareGradeResultPayload,
     SharePrivateChatPayload,
@@ -16,8 +19,14 @@ import { classKeys } from "./classKeys";
 const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
 
+const useViewerUserId = () => {
+    const { data: session } = useSessionQuery();
+    return session?.user.id ?? null;
+};
+
 export const useCreateClassMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: CreateClassPayload) =>
@@ -29,7 +38,7 @@ export const useCreateClassMutation = () => {
                     : "班级创建成功",
             );
             await queryClient.invalidateQueries({
-                queryKey: classKeys.context(),
+                queryKey: classKeys.context(viewerUserId),
             });
         },
         onError: (error) => {
@@ -40,6 +49,7 @@ export const useCreateClassMutation = () => {
 
 export const useAssignTeacherToClassMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: AssignTeacherPayload) =>
@@ -48,10 +58,10 @@ export const useAssignTeacherToClassMutation = () => {
             toast.success("教师分配成功");
             await Promise.all([
                 queryClient.invalidateQueries({
-                    queryKey: classKeys.context(),
+                    queryKey: classKeys.context(viewerUserId),
                 }),
                 queryClient.invalidateQueries({
-                    queryKey: classKeys.members(payload.classId),
+                    queryKey: classKeys.members(viewerUserId, payload.classId),
                 }),
             ]);
         },
@@ -63,6 +73,7 @@ export const useAssignTeacherToClassMutation = () => {
 
 export const useCreateInviteCodeMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: CreateInviteCodePayload) =>
@@ -70,7 +81,7 @@ export const useCreateInviteCodeMutation = () => {
         onSuccess: async (_, payload) => {
             toast.success("邀请码创建成功");
             await queryClient.invalidateQueries({
-                queryKey: classKeys.inviteCodes(payload.classId),
+                queryKey: classKeys.inviteCodes(viewerUserId, payload.classId),
             });
         },
         onError: (error) => {
@@ -81,6 +92,7 @@ export const useCreateInviteCodeMutation = () => {
 
 export const useRevokeInviteCodeMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: ({
@@ -93,7 +105,7 @@ export const useRevokeInviteCodeMutation = () => {
         onSuccess: async (_, payload) => {
             toast.success("邀请码已撤销");
             await queryClient.invalidateQueries({
-                queryKey: classKeys.inviteCodes(payload.classId),
+                queryKey: classKeys.inviteCodes(viewerUserId, payload.classId),
             });
         },
         onError: (error) => {
@@ -104,6 +116,7 @@ export const useRevokeInviteCodeMutation = () => {
 
 export const useJoinClassByInviteCodeMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: JoinClassByCodePayload) =>
@@ -117,7 +130,7 @@ export const useJoinClassByInviteCodeMutation = () => {
                 toast.success("加入班级成功");
             }
             await queryClient.invalidateQueries({
-                queryKey: classKeys.context(),
+                queryKey: classKeys.context(viewerUserId),
             });
         },
         onError: (error) => {
@@ -128,6 +141,7 @@ export const useJoinClassByInviteCodeMutation = () => {
 
 export const useRemoveStudentFromClassMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: RemoveStudentPayload) =>
@@ -135,10 +149,10 @@ export const useRemoveStudentFromClassMutation = () => {
         onSuccess: async (_, payload) => {
             toast.success("已移除学生");
             await queryClient.invalidateQueries({
-                queryKey: classKeys.members(payload.classId),
+                queryKey: classKeys.members(viewerUserId, payload.classId),
             });
             await queryClient.invalidateQueries({
-                queryKey: classKeys.context(),
+                queryKey: classKeys.context(viewerUserId),
             });
         },
         onError: (error) => {
@@ -149,6 +163,7 @@ export const useRemoveStudentFromClassMutation = () => {
 
 export const useCreateGroupThreadMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: ({ classId, title }: { classId: string; title: string }) =>
@@ -156,7 +171,7 @@ export const useCreateGroupThreadMutation = () => {
         onSuccess: async (_, payload) => {
             toast.success("话题已创建");
             await queryClient.invalidateQueries({
-                queryKey: classKeys.threads(payload.classId),
+                queryKey: classKeys.threads(viewerUserId, payload.classId),
             });
         },
         onError: (error) => {
@@ -165,17 +180,69 @@ export const useCreateGroupThreadMutation = () => {
     });
 };
 
+export const useRenameClassThreadMutation = () => {
+    const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
+
+    return useMutation({
+        mutationFn: (payload: RenameClassThreadPayload) =>
+            classDomainInterface.renameClassThread(payload),
+        onSuccess: async (thread) => {
+            toast.success("话题已重命名");
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.threads(viewerUserId, thread.classId),
+            });
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error, "重命名话题失败"));
+        },
+    });
+};
+
+export const useDeleteClassThreadMutation = () => {
+    const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
+
+    return useMutation({
+        mutationFn: (payload: DeleteClassThreadPayload) =>
+            classDomainInterface.deleteClassThread(payload),
+        onSuccess: async (result) => {
+            toast.success("话题已删除");
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: classKeys.threads(viewerUserId, result.classId),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: classKeys.threadMessages(
+                        viewerUserId,
+                        result.threadId,
+                    ),
+                }),
+            ]);
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error, "删除话题失败"));
+        },
+    });
+};
+
 export const usePostClassMessageMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: PostClassMessagePayload) =>
             classDomainInterface.postClassMessage(payload),
         onSuccess: async (_, payload) => {
             await queryClient.invalidateQueries({
-                queryKey: classKeys.threadMessages(payload.threadId),
+                queryKey: classKeys.threadMessages(
+                    viewerUserId,
+                    payload.threadId,
+                ),
             });
-            await queryClient.invalidateQueries({ queryKey: classKeys.all });
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.all(viewerUserId),
+            });
         },
         onError: (error) => {
             toast.error(getErrorMessage(error, "发送消息失败"));
@@ -185,15 +252,24 @@ export const usePostClassMessageMutation = () => {
 
 export const useSharePrivateChatToClassMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: SharePrivateChatPayload) =>
             classDomainInterface.sharePrivateChatToClass(payload),
-        onSuccess: async (thread) => {
+        onSuccess: async (thread, payload) => {
             toast.success("分享聊天成功");
-            await queryClient.invalidateQueries({
-                queryKey: classKeys.threads(thread.classId),
-            });
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: classKeys.threads(viewerUserId, thread.classId),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: classKeys.threadMessages(
+                        viewerUserId,
+                        payload.threadId,
+                    ),
+                }),
+            ]);
         },
         onError: (error) => {
             toast.error(getErrorMessage(error, "分享聊天失败"));
@@ -203,6 +279,7 @@ export const useSharePrivateChatToClassMutation = () => {
 
 export const useShareGradeResultToClassMutation = () => {
     const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
 
     return useMutation({
         mutationFn: (payload: ShareGradeResultPayload) =>
@@ -210,7 +287,7 @@ export const useShareGradeResultToClassMutation = () => {
         onSuccess: async (thread) => {
             toast.success("分享反馈成功");
             await queryClient.invalidateQueries({
-                queryKey: classKeys.threads(thread.classId),
+                queryKey: classKeys.threads(viewerUserId, thread.classId),
             });
         },
         onError: (error) => {
