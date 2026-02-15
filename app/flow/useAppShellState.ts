@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-    useClassAssignmentsQuery,
     useCreateAssignmentMutation,
     useGenerateGradeDraftMutation,
     useMyAssignmentsQuery,
@@ -146,9 +145,6 @@ export const useAppShellState = () => {
     );
     const hasStudentClassMembership = joinedClasses.length > 0;
     const hasTeacherClassMembership = teachingClasses.length > 0;
-    const activeTeacherClassId =
-        selectedClassId ?? teachingClasses[0]?.id ?? null;
-
     const myAssignmentsQuery = useMyAssignmentsQuery(
         undefined,
         !!session && canAccessStudentAssignments,
@@ -157,11 +153,6 @@ export const useAppShellState = () => {
         undefined,
         !!session && canAccessStudentAssignments,
     );
-    const classAssignmentsQuery = useClassAssignmentsQuery(
-        activeTeacherClassId ?? undefined,
-        !!session && canAccessTeacherAssignments && !!activeTeacherClassId,
-    );
-
     const classThreadsBatchQuery = useClassThreadsBatchQuery(
         classOptions.map((classItem) => classItem.id),
         !!session && canAccessClassHub,
@@ -572,7 +563,6 @@ export const useAppShellState = () => {
     );
 
     const studentAssignments = myAssignmentsQuery.data ?? [];
-    const teacherAssignments = classAssignmentsQuery.data ?? [];
     const feedbackSummaries = myFeedbackQuery.data ?? [];
 
     const assignmentById = useMemo(
@@ -871,6 +861,9 @@ export const useAppShellState = () => {
             isClassAdmin: !!classContext?.isAdmin,
             fallbackView,
             classOptions,
+            teacherClassOptions: classOptions.filter(
+                (classItem) => classItem.role === "teacher",
+            ),
             selectedClass,
             classSessionGroups,
             hasStudentClassMembership,
@@ -887,7 +880,6 @@ export const useAppShellState = () => {
             sharePickerDescription,
             shareableThreadGroups,
             studentAssignments,
-            teacherAssignments,
             feedbackSummaries,
             submitTargetAssignments,
             classHubProps: {
@@ -919,7 +911,6 @@ export const useAppShellState = () => {
             isSavingGradeReview: saveGradeReviewMutation.isPending,
             isReleasingGrade: releaseGradeMutation.isPending,
             isLoadingStudentAssignments: myAssignmentsQuery.isLoading,
-            isLoadingTeacherAssignments: classAssignmentsQuery.isLoading,
             isLoadingFeedbackSummaries: myFeedbackQuery.isLoading,
         },
     };
