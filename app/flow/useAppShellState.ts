@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+    useClassAssignmentsQuery,
+    useCreateAssignmentMutation,
+    useGenerateGradeDraftMutation,
+    useMyAssignmentsQuery,
+    useMyFeedbackQuery,
+    useReleaseGradeMutation,
+    useSaveGradeReviewMutation,
+    useSubmitAssignmentFromChatMutation,
+    type Assignment,
+    type CreateAssignmentPayload,
+    type SaveGradeReviewPayload,
+} from "../../assignment/public";
+import { assignmentKeys } from "../../assignment/queries/assignmentKeys";
 import { useAuthFlow } from "../../auth/public";
 import { hasPermission, useMyAuthorizationQuery } from "../../authz/public";
 import {
@@ -26,7 +40,6 @@ import { useAppShareFlow } from "../useAppShareFlow";
 import { useAppView } from "../useAppView";
 import type { ActiveView } from "../types/view";
 import {
-    APP_ASSIGNMENT_FIXTURES,
     APP_CLASS_MEMBERSHIP_NOTICES,
     APP_FALLBACK_USER_PROFILE,
     buildSharePickerDescription,
@@ -142,11 +155,24 @@ const parseSharedChatMessages = (content: Record<string, unknown>) =>
               .filter((message): message is ChatMessage => !!message)
         : [];
 
+type SubmitToAssignmentIntent =
+    | {
+          kind: "chatSession";
+          chatId: string;
+      }
+    | {
+          kind: "chatMessage";
+          chatId: string;
+          messageId: string;
+      };
+
 export const useAppShellState = () => {
     const queryClient = useQueryClient();
     const [creatingClassThreadId, setCreatingClassThreadId] = useState<
         string | null
     >(null);
+    const [submitToAssignmentIntent, setSubmitToAssignmentIntent] =
+        useState<SubmitToAssignmentIntent | null>(null);
     const previousViewerUserIdRef = useRef<string | null | undefined>(
         undefined,
     );
@@ -220,6 +246,21 @@ export const useAppShellState = () => {
     );
     const hasStudentClassMembership = joinedClasses.length > 0;
     const hasTeacherClassMembership = teachingClasses.length > 0;
+    const activeTeacherClassId =
+        selectedClassId ?? teachingClasses[0]?.id ?? null;
+
+    const myAssignmentsQuery = useMyAssignmentsQuery(
+        undefined,
+        !!session && canAccessStudentAssignments,
+    );
+    const myFeedbackQuery = useMyFeedbackQuery(
+        undefined,
+        !!session && canAccessStudentAssignments,
+    );
+    const classAssignmentsQuery = useClassAssignmentsQuery(
+        activeTeacherClassId ?? undefined,
+        !!session && canAccessTeacherAssignments && !!activeTeacherClassId,
+    );
 
     const classThreadsBatchQuery = useClassThreadsBatchQuery(
         classOptions.map((classItem) => classItem.id),
@@ -378,6 +419,7 @@ export const useAppShellState = () => {
 
         handleStopGeneration();
         setShareIntent(null);
+        setSubmitToAssignmentIntent(null);
         handleClearCurrentSessionSelection();
         activeChatTargetState.actions.setPrivateChatTarget();
         selectedClassState.actions.setSelectedClassId(null);
@@ -396,6 +438,9 @@ export const useAppShellState = () => {
                     queryClient.cancelQueries({
                         queryKey: authzKeys.all(previousViewerUserId),
                     }),
+                    queryClient.cancelQueries({
+                        queryKey: assignmentKeys.all(previousViewerUserId),
+                    }),
                 ]);
 
                 queryClient.removeQueries({
@@ -406,6 +451,9 @@ export const useAppShellState = () => {
                 });
                 queryClient.removeQueries({
                     queryKey: authzKeys.all(previousViewerUserId),
+                });
+                queryClient.removeQueries({
+                    queryKey: assignmentKeys.all(previousViewerUserId),
                 });
             })();
         }
@@ -420,12 +468,19 @@ export const useAppShellState = () => {
         selectedClassState.actions,
         setChatMode,
         setShareIntent,
+        setSubmitToAssignmentIntent,
         viewerUserId,
     ]);
 
     const createGroupThreadMutation = useCreateGroupThreadMutation();
     const renameClassThreadMutation = useRenameClassThreadMutation();
     const deleteClassThreadMutation = useDeleteClassThreadMutation();
+    const createAssignmentMutation = useCreateAssignmentMutation();
+    const submitAssignmentFromChatMutation =
+        useSubmitAssignmentFromChatMutation();
+    const generateGradeDraftMutation = useGenerateGradeDraftMutation();
+    const saveGradeReviewMutation = useSaveGradeReviewMutation();
+    const releaseGradeMutation = useReleaseGradeMutation();
 
     const getClassNameById = useCallback(
         (classId: string) =>
@@ -616,6 +671,200 @@ export const useAppShellState = () => {
         ],
     );
 
+    const studentAssignments = myAssignmentsQuery.data ?? [];
+    const teacherAssignments = classAssignmentsQuery.data ?? [];
+    const feedbackSummaries = myFeedbackQuery.data ?? [];
+
+    const assignmentById = useMemo(
+        () =>
+            studentAssignments.reduce<Map<string, Assignment>>((map, item) => {
+                map.set(item.id, item);
+                return map;
+            }, new Map<string, Assignment>()),
+        [studentAssignments],
+    );
+
+    const submitTargetAssignments = useMemo(
+        () =>
+            studentAssignments.filter(
+                (assignment) => assignment.status !== "closed",
+            ),
+        [studentAssignments],
+    );
+
+    const handleSubmitChatSessionToAssignment = useCallback(
+        (sessionId: string) => {
+            if (!canAccessStudentAssignments) {
+                toast.error("需要学生作业权限。");
+                return;
+            }
+
+            if (!sessionId) {
+                toast.error("请先打开一个私聊会话。");
+                return;
+            }
+
+            if (submitTargetAssignments.length === 0) {
+                toast.error("当前没有可提交的作业。");
+                return;
+            }
+
+            setSubmitToAssignmentIntent({
+                kind: "chatSession",
+                chatId: sessionId,
+            });
+        },
+        [canAccessStudentAssignments, submitTargetAssignments.length],
+    );
+
+    const handleSubmitChatMessageToAssignment = useCallback(
+        (messageId: string) => {
+            if (!canAccessStudentAssignments) {
+                toast.error("需要学生作业权限。");
+                return;
+            }
+
+            if (!safeCurrentSessionId) {
+                toast.error("请先打开一个私聊会话。");
+                return;
+            }
+
+            if (submitTargetAssignments.length === 0) {
+                toast.error("当前没有可提交的作业。");
+                return;
+            }
+
+            setSubmitToAssignmentIntent({
+                kind: "chatMessage",
+                chatId: safeCurrentSessionId,
+                messageId,
+            });
+        },
+        [
+            canAccessStudentAssignments,
+            safeCurrentSessionId,
+            submitTargetAssignments.length,
+        ],
+    );
+
+    const handleConfirmSubmitToAssignment = useCallback(
+        async (assignmentId: string, reflectionText: string) => {
+            const assignment = assignmentById.get(assignmentId);
+            if (!assignment) {
+                toast.error("未找到作业。");
+                return false;
+            }
+
+            if (!submitToAssignmentIntent) {
+                toast.error("请选择聊天提交来源。");
+                return false;
+            }
+
+            try {
+                await submitAssignmentFromChatMutation.mutateAsync({
+                    assignmentId,
+                    classId: assignment.classId,
+                    sourceKind:
+                        submitToAssignmentIntent.kind === "chatSession"
+                            ? "chat_session_snapshot"
+                            : "chat_response_snapshot",
+                    sourceChatId: submitToAssignmentIntent.chatId,
+                    sourceMessageId:
+                        submitToAssignmentIntent.kind === "chatMessage"
+                            ? submitToAssignmentIntent.messageId
+                            : undefined,
+                    reflectionText: reflectionText.trim(),
+                });
+
+                setSubmitToAssignmentIntent(null);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [assignmentById, submitAssignmentFromChatMutation, submitToAssignmentIntent],
+    );
+
+    const handleSubmitCurrentSessionToAssignment = useCallback(
+        async (assignmentId: string, reflectionText = "") => {
+            if (!safeCurrentSessionId) {
+                toast.error("请先打开一个私聊会话。");
+                return false;
+            }
+
+            const assignment = assignmentById.get(assignmentId);
+            if (!assignment) {
+                toast.error("未找到作业。");
+                return false;
+            }
+
+            try {
+                await submitAssignmentFromChatMutation.mutateAsync({
+                    assignmentId,
+                    classId: assignment.classId,
+                    sourceKind: "chat_session_snapshot",
+                    sourceChatId: safeCurrentSessionId,
+                    reflectionText: reflectionText.trim(),
+                });
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [assignmentById, safeCurrentSessionId, submitAssignmentFromChatMutation],
+    );
+
+    const handleCreateAssignment = useCallback(
+        async (payload: CreateAssignmentPayload) => {
+            try {
+                await createAssignmentMutation.mutateAsync(payload);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [createAssignmentMutation],
+    );
+
+    const handleGenerateGradeDraft = useCallback(
+        async (submissionId: string, model?: string) => {
+            try {
+                await generateGradeDraftMutation.mutateAsync({
+                    submissionId,
+                    model,
+                });
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [generateGradeDraftMutation],
+    );
+
+    const handleSaveGradeReview = useCallback(
+        async (payload: SaveGradeReviewPayload) => {
+            try {
+                await saveGradeReviewMutation.mutateAsync(payload);
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [saveGradeReviewMutation],
+    );
+
+    const handleReleaseGrade = useCallback(
+        async (submissionId: string) => {
+            try {
+                await releaseGradeMutation.mutateAsync({ submissionId });
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [releaseGradeMutation],
+    );
+
     const classChatTarget = activeChatTargetState.state.classChatTarget;
     const activeClassThreadId = activeChatTargetState.state.activeClassThreadId;
     const chatTargetType = activeChatTargetState.state.activeChatTarget.type;
@@ -648,6 +897,7 @@ export const useAppShellState = () => {
             selectedClassId,
             activeChatTarget: activeChatTargetState.state.activeChatTarget,
             shareIntent,
+            submitToAssignmentIntent,
             chatMode,
         },
         actions: {
@@ -655,6 +905,7 @@ export const useAppShellState = () => {
             setActiveView: guardedSetActiveView,
             setSelectedClassId: selectedClassState.actions.setSelectedClassId,
             setShareIntent,
+            setSubmitToAssignmentIntent,
             handleUpdateProfile,
             handleSignOut,
             onSendMessage: safeOnSendMessage,
@@ -674,6 +925,14 @@ export const useAppShellState = () => {
             handleShareChatSessionToClass,
             handleConfirmThreadShare,
             handleCopySharedClassMessageToNewSession,
+            handleSubmitChatSessionToAssignment,
+            handleSubmitChatMessageToAssignment,
+            handleConfirmSubmitToAssignment,
+            handleSubmitCurrentSessionToAssignment,
+            handleCreateAssignment,
+            handleGenerateGradeDraft,
+            handleSaveGradeReview,
+            handleReleaseGrade,
         },
         derived: {
             safeUserProfile,
@@ -696,6 +955,10 @@ export const useAppShellState = () => {
             activeClassThreadId,
             sharePickerDescription,
             shareableThreadGroups,
+            studentAssignments,
+            teacherAssignments,
+            feedbackSummaries,
+            submitTargetAssignments,
             classHubProps: {
                 requesterEmail: session?.user.email,
                 canCreateClass:
@@ -709,7 +972,6 @@ export const useAppShellState = () => {
                 onRenameClassThread: handleRenameClassThread,
                 onDeleteClassThread: handleDeleteClassThread,
             },
-            assignmentFixtures: APP_ASSIGNMENT_FIXTURES,
             classMembershipNotices: APP_CLASS_MEMBERSHIP_NOTICES,
         },
         meta: {
@@ -720,6 +982,14 @@ export const useAppShellState = () => {
             isClassContextLoading,
             isSharing,
             creatingClassThreadId,
+            isSubmittingAssignment: submitAssignmentFromChatMutation.isPending,
+            isCreatingAssignment: createAssignmentMutation.isPending,
+            isGeneratingGradeDraft: generateGradeDraftMutation.isPending,
+            isSavingGradeReview: saveGradeReviewMutation.isPending,
+            isReleasingGrade: releaseGradeMutation.isPending,
+            isLoadingStudentAssignments: myAssignmentsQuery.isLoading,
+            isLoadingTeacherAssignments: classAssignmentsQuery.isLoading,
+            isLoadingFeedbackSummaries: myFeedbackQuery.isLoading,
         },
     };
 };
