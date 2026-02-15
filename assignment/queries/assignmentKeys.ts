@@ -17,6 +17,10 @@ export const assignmentKeys = {
         viewerUserId: string | null | undefined,
         classId: string,
     ) => [...assignmentKeys.all(viewerUserId), "class-assignments", classId] as const,
+    dashboard: (
+        viewerUserId: string | null | undefined,
+        classId: string,
+    ) => [...assignmentKeys.all(viewerUserId), "dashboard", classId] as const,
     assignmentSubmissions: (
         viewerUserId: string | null | undefined,
         assignmentId: string,

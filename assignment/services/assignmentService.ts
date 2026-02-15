@@ -2,6 +2,7 @@ import type {
     Assignment,
     AssignmentFeedbackDetail,
     AssignmentFeedbackSummary,
+    AssignmentDashboardItem,
     AssignmentSubmission,
     CreateAssignmentPayload,
     GenerateGradeDraftPayload,
@@ -11,6 +12,7 @@ import type {
 } from "../types";
 import {
     normalizeAssignment,
+    normalizeAssignmentDashboardItem,
     normalizeAssignmentFeedbackSummary,
     normalizeAssignmentGrade,
     normalizeAssignmentSubmission,
@@ -28,6 +30,7 @@ export const createAssignment = async (
         due_at: payload.dueAt ?? null,
         ai_grading_enabled: payload.aiGradingEnabled ?? true,
         status: payload.status ?? "published",
+        attachments: payload.attachments ?? [],
     });
 
     return normalizeAssignment(result.assignment);
@@ -60,6 +63,21 @@ export const listClassAssignments = async (
         ? result.assignments
               .map(normalizeAssignment)
               .filter((assignment) => assignment.id)
+        : [];
+};
+
+export const listClassAssignmentDashboard = async (
+    classId: string,
+): Promise<AssignmentDashboardItem[]> => {
+    const result = await invokeAssignmentCore<{ assignments?: unknown[] }>({
+        action: "list_class_assignment_dashboard",
+        class_id: classId,
+    });
+
+    return Array.isArray(result.assignments)
+        ? result.assignments
+              .map(normalizeAssignmentDashboardItem)
+              .filter((item) => item.assignment.id)
         : [];
 };
 

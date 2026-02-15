@@ -1,5 +1,6 @@
 export {
     useAssignmentSubmissionsQuery,
+    useClassAssignmentDashboardQuery,
     useClassAssignmentsQuery,
     useFeedbackDetailQuery,
     useMyAssignmentsQuery,

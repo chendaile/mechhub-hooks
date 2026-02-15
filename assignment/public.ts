@@ -4,6 +4,7 @@ export { useSubmitAssignmentState } from "./ui/useSubmitAssignmentState";
 export { deriveViewFeedbackModel } from "./ui/deriveViewFeedbackModel";
 export {
     useAssignmentSubmissionsQuery,
+    useClassAssignmentDashboardQuery,
     useClassAssignmentsQuery,
     useCreateAssignmentMutation,
     useFeedbackDetailQuery,
@@ -14,8 +15,12 @@ export {
     useSaveGradeReviewMutation,
     useSubmitAssignmentFromChatMutation,
 } from "./queries/useAssignmentQueries";
+export { uploadAssignmentAttachments } from "./services/assignmentAttachmentUpload";
 export type {
     Assignment,
+    AssignmentAttachment,
+    AssignmentDashboardItem,
+    AssignmentDashboardSubmission,
     AssignmentFeedbackDetail,
     AssignmentFeedbackSummary,
     AssignmentGrade,

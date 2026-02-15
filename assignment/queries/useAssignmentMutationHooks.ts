@@ -38,6 +38,12 @@ export const useCreateAssignmentMutation = () => {
                 queryClient.invalidateQueries({
                     queryKey: assignmentKeys.myAssignments(viewerUserId, null),
                 }),
+                queryClient.invalidateQueries({
+                    queryKey: assignmentKeys.dashboard(
+                        viewerUserId,
+                        assignment.classId,
+                    ),
+                }),
             ]);
         },
         onError: (error) => {
@@ -72,6 +78,12 @@ export const useSubmitAssignmentFromChatMutation = () => {
                     queryKey: assignmentKeys.assignmentSubmissions(
                         viewerUserId,
                         submission.assignmentId,
+                    ),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: assignmentKeys.dashboard(
+                        viewerUserId,
+                        submission.classId,
                     ),
                 }),
             ]);

@@ -25,6 +25,14 @@ export interface AssignmentKeyInsight {
     type: AssignmentInsightType;
 }
 
+export interface AssignmentAttachment {
+    name: string;
+    url: string;
+    size?: number;
+    contentType?: string;
+    storagePath?: string;
+}
+
 export type SubmissionSourceKind =
     | "chat_session_snapshot"
     | "chat_response_snapshot";
@@ -41,6 +49,7 @@ export interface Assignment {
     title: string;
     instructions: string | null;
     dueAt: string | null;
+    attachments?: AssignmentAttachment[];
     createdByUserId: string;
     aiGradingEnabled: boolean;
     status: AssignmentStatus;
@@ -88,6 +97,21 @@ export interface AssignmentGrade {
     updatedAt?: string;
 }
 
+export interface AssignmentDashboardSubmission {
+    submissionId: string;
+    assignmentId: string;
+    studentUserId: string;
+    studentName: string;
+    submittedAt: string;
+    gradeStatus: AssignmentGradeStatus | null;
+    aiFeedbackDraft: string | null;
+}
+
+export interface AssignmentDashboardItem {
+    assignment: Assignment;
+    submissions: AssignmentDashboardSubmission[];
+}
+
 export interface AssignmentFeedbackSummary {
     assignment: Assignment | null;
     submission: AssignmentSubmission;
@@ -107,6 +131,7 @@ export interface CreateAssignmentPayload {
     dueAt?: string | null;
     aiGradingEnabled?: boolean;
     status?: AssignmentStatus;
+    attachments?: AssignmentAttachment[];
 }
 
 export interface SubmitAssignmentFromChatPayload {

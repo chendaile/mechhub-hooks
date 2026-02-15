@@ -1,5 +1,8 @@
 import type {
     Assignment,
+    AssignmentAttachment,
+    AssignmentDashboardItem,
+    AssignmentDashboardSubmission,
     AssignmentFeedbackSummary,
     AssignmentGrade,
     AssignmentSubmission,
@@ -26,6 +29,38 @@ const getNumber = (row: RawRecord, camel: string, snake?: string) => {
 const getBoolean = (row: RawRecord, camel: string, snake?: string) => {
     const value = row[camel] ?? (snake ? row[snake] : undefined);
     return typeof value === "boolean" ? value : Boolean(value);
+};
+
+const normalizeAttachment = (value: unknown): AssignmentAttachment | null => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null;
+    }
+
+    const record = value as RawRecord;
+    const name = typeof record.name === "string" ? record.name : "";
+    const url = typeof record.url === "string" ? record.url : "";
+
+    if (!name || !url) {
+        return null;
+    }
+
+    const sizeRaw = record.size;
+    const size =
+        typeof sizeRaw === "number" && Number.isFinite(sizeRaw) && sizeRaw >= 0
+            ? sizeRaw
+            : undefined;
+    const contentType =
+        typeof record.contentType === "string" ? record.contentType : undefined;
+    const storagePath =
+        typeof record.storagePath === "string" ? record.storagePath : undefined;
+
+    return {
+        name,
+        url,
+        ...(size !== undefined ? { size } : {}),
+        ...(contentType ? { contentType } : {}),
+        ...(storagePath ? { storagePath } : {}),
+    };
 };
 
 const normalizeAssignmentStatus = (value: unknown): AssignmentStatus =>
@@ -114,6 +149,9 @@ export const normalizeAssignmentSubmission = (
 
 export const normalizeAssignment = (value: unknown): Assignment => {
     const row = (value ?? {}) as RawRecord;
+    const rawAttachments = Array.isArray(row.attachments)
+        ? row.attachments
+        : [];
 
     return {
         id: getString(row, "id"),
@@ -121,6 +159,9 @@ export const normalizeAssignment = (value: unknown): Assignment => {
         title: getString(row, "title") || "Untitled Assignment",
         instructions: getNullableString(row, "instructions"),
         dueAt: getNullableString(row, "dueAt", "due_at"),
+        attachments: rawAttachments
+            .map(normalizeAttachment)
+            .filter((item): item is AssignmentAttachment => !!item),
         createdByUserId: getString(row, "createdByUserId", "created_by_user_id"),
         aiGradingEnabled: getBoolean(
             row,
@@ -137,6 +178,48 @@ export const normalizeAssignment = (value: unknown): Assignment => {
         latestGrade: row.latest_grade
             ? normalizeAssignmentGrade(row.latest_grade)
             : null,
+    };
+};
+
+export const normalizeAssignmentDashboardSubmission = (
+    value: unknown,
+): AssignmentDashboardSubmission => {
+    const row = (value ?? {}) as RawRecord;
+
+    const gradeStatusRaw = row.gradeStatus ?? row.grade_status;
+    const gradeStatus =
+        gradeStatusRaw === "released" || gradeStatusRaw === "draft"
+            ? gradeStatusRaw
+            : null;
+
+    return {
+        submissionId: getString(row, "submissionId", "submission_id"),
+        assignmentId: getString(row, "assignmentId", "assignment_id"),
+        studentUserId: getString(row, "studentUserId", "student_user_id"),
+        studentName: getString(row, "studentName", "student_name"),
+        submittedAt: getString(row, "submittedAt", "submitted_at"),
+        gradeStatus,
+        aiFeedbackDraft: getNullableString(
+            row,
+            "aiFeedbackDraft",
+            "ai_feedback_draft",
+        ),
+    };
+};
+
+export const normalizeAssignmentDashboardItem = (
+    value: unknown,
+): AssignmentDashboardItem => {
+    const row = (value ?? {}) as RawRecord;
+    const rawSubmissions = Array.isArray(row.submissions)
+        ? row.submissions
+        : [];
+
+    return {
+        assignment: normalizeAssignment(row.assignment),
+        submissions: rawSubmissions
+            .map(normalizeAssignmentDashboardSubmission)
+            .filter((submission) => submission.assignmentId),
     };
 };
 

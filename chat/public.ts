@@ -8,6 +8,11 @@ export { useImageGradingPanelState } from "./ui/useImageGradingPanelState";
 export { useMessageListUiState } from "./ui/useMessageListUiState";
 export { useSendState } from "./ui/useSendState";
 export { useTextMessageUiState } from "./ui/useTextMessageUiState";
+export {
+    normalizeSnapshotMessage,
+    normalizeSnapshotMessages,
+} from "./utils/normalizeSnapshotMessage";
+export { buildSnapshotPreview } from "./utils/snapshotPreview";
 export type {
     ChatMode,
     ChatSession,

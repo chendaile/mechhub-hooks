@@ -33,6 +33,24 @@ export const useClassAssignmentsQuery = (
     });
 };
 
+export const useClassAssignmentDashboardQuery = (
+    classId?: string,
+    enabled = true,
+) => {
+    const { data: session } = useSessionQuery();
+    const viewerUserId = session?.user.id ?? null;
+
+    return useQuery({
+        queryKey: assignmentKeys.dashboard(viewerUserId, classId ?? "unknown"),
+        queryFn: () =>
+            assignmentDomainInterface.listClassAssignmentDashboard(
+                classId ?? "",
+            ),
+        enabled: enabled && !!session && !!classId,
+        staleTime: 10_000,
+    });
+};
+
 export const useAssignmentSubmissionsQuery = (
     assignmentId?: string,
     classId?: string,
