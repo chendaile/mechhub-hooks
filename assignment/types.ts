@@ -39,7 +39,10 @@ export type SubmissionSourceKind =
 
 export type AssignmentStatus = "draft" | "published" | "closed";
 
-export type AssignmentSubmissionRecordStatus = "submitted" | "graded" | "returned";
+export type AssignmentSubmissionRecordStatus =
+    | "submitted"
+    | "graded"
+    | "returned";
 
 export type AssignmentGradeStatus = "draft" | "released";
 
@@ -122,6 +125,16 @@ export interface AssignmentFeedbackDetail {
     assignment: Assignment | null;
     submission: AssignmentSubmission;
     grade: AssignmentGrade | null;
+}
+
+export interface PublishAssignmentDraft {
+    title: string;
+    classId: string;
+    dueDate: string;
+    dueTime: string;
+    instructions: string;
+    files: File[];
+    aiGradingEnabled: boolean;
 }
 
 export interface CreateAssignmentPayload {

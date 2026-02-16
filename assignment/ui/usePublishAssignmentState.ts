@@ -1,17 +1,10 @@
 import { usePublishAssignmentFileState } from "../states/usePublishAssignmentFileState";
 import { usePublishAssignmentFlow } from "../flows/usePublishAssignmentFlow";
 import { usePublishAssignmentFormState } from "../states/usePublishAssignmentFormState";
+import type { PublishAssignmentDraft } from "../types";
 
 interface UsePublishAssignmentStateParams {
-    onPublish: (
-        name: string,
-        module: string,
-        dueDate: string,
-        dueTime: string,
-        instructions: string,
-        files: File[],
-        aiGradingEnabled: boolean,
-    ) => Promise<void>;
+    onPublish: (draft: PublishAssignmentDraft) => Promise<void>;
 }
 
 export const usePublishAssignmentState = ({
@@ -23,12 +16,12 @@ export const usePublishAssignmentState = ({
 
     const handlePublish = async () => {
         await flow.actions.handlePublish({
-            assignmentName: form.state.assignmentName,
-            selectedModule: form.state.selectedModule,
+            title: form.state.title,
+            classId: form.state.classId,
             dueDate: form.state.dueDate,
             dueTime: form.state.dueTime,
             instructions: form.state.instructions,
-            attachedFiles: files.state.attachedFiles,
+            files: files.state.attachedFiles,
             aiGradingEnabled: form.state.aiGradingEnabled,
         });
     };
@@ -48,10 +41,10 @@ export const usePublishAssignmentState = ({
     return {
         state,
         actions,
-        assignmentName: state.assignmentName,
-        setAssignmentName: actions.setAssignmentName,
-        selectedModule: state.selectedModule,
-        setSelectedModule: actions.setSelectedModule,
+        title: state.title,
+        setTitle: actions.setTitle,
+        classId: state.classId,
+        setClassId: actions.setClassId,
         dueDate: state.dueDate,
         setDueDate: actions.setDueDate,
         dueTime: state.dueTime,

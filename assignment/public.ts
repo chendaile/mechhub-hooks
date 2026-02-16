@@ -35,4 +35,5 @@ export type {
     SaveGradeReviewPayload,
     SubmissionSourceKind,
     SubmitAssignmentFromChatPayload,
+    PublishAssignmentDraft,
 } from "./types";

@@ -1,8 +1,3 @@
-import type {
-    AssignmentGradeBreakdown,
-    AssignmentKeyInsight,
-    AssignmentStudentSubmission,
-} from "../../assignment/types";
 import type { UserProfile } from "../../auth/types";
 import type { ClassSummary, ClassThread } from "../../class/types";
 import type { ShareIntent } from "../types/share";
@@ -22,89 +17,6 @@ export const APP_FALLBACK_USER_PROFILE: UserProfile = {
     name: "张同学",
     avatar: "",
     role: "工程力学专业学生",
-};
-
-export const APP_ASSIGNMENT_FIXTURES = {
-    assignmentTitle: "Statics: Equilibrium of Rigid Bodies",
-    assignmentDescription:
-        "Upload your solution for 'Statics: Equilibrium of Rigid Bodies'. AI will analyze your steps and provide instant feedback.",
-    viewFeedback: {
-        overallScore: 85,
-        maxScore: 100,
-        submittedDate: "Oct 12, 2023",
-        teacherName: "Prof. Sarah Chen",
-        teacherSummary:
-            "Strong conceptual understanding. Minor sign error in the uniform load moment calculation.",
-        aiAnalysis:
-            "The Free Body Diagram is well-drawn and correctly identifies all external forces and moments. The moment equation for the uniform load shows good understanding but had a sign convention error.",
-        generalComments: "Great work overall! See annotated notes.",
-        privateNotes: "Needs review on moments topic.",
-    },
-    modules: [
-        "Statics of Rigid Bodies",
-        "Dynamics I",
-        "Mechanics of Materials",
-    ],
-    gradeStudents: [
-        {
-            id: "1",
-            studentName: "Oliver Thompson",
-            submittedDate: "Submitted 2h ago",
-            status: "pending",
-            submission:
-                "https://via.placeholder.com/800x600?text=Student+Submission",
-        },
-        {
-            id: "2",
-            studentName: "Jane Doe",
-            submittedDate: "Graded",
-            status: "graded",
-            submission:
-                "https://via.placeholder.com/800x600?text=Student+Submission",
-        },
-        {
-            id: "3",
-            studentName: "Li Wei",
-            submittedDate: "Not submitted",
-            status: "pending",
-            submission:
-                "https://via.placeholder.com/800x600?text=Student+Submission",
-        },
-    ] satisfies AssignmentStudentSubmission[],
-    gradeBreakdown: [
-        {
-            category: "Method",
-            score: 30,
-            maxScore: 30,
-            color: "green",
-        },
-        {
-            category: "Accuracy",
-            score: 35,
-            maxScore: 50,
-            color: "yellow",
-        },
-        {
-            category: "Formatting",
-            score: 20,
-            maxScore: 20,
-            color: "green",
-        },
-    ] satisfies AssignmentGradeBreakdown[],
-    keyInsights: [
-        {
-            title: "Good FBD Isolation",
-            description:
-                "You correctly identified all external forces acting on the beam.",
-            type: "success",
-        },
-        {
-            title: "Moment Equation (Step 2)",
-            description:
-                "Sign convention error in the uniform load's moment calculation. The load should be negative per your convention.",
-            type: "error",
-        },
-    ] satisfies AssignmentKeyInsight[],
 };
 
 export const APP_CLASS_MEMBERSHIP_NOTICES = {

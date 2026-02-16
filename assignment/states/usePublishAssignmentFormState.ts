@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 export const usePublishAssignmentFormState = () => {
-    const [assignmentName, setAssignmentName] = useState("");
-    const [selectedModule, setSelectedModule] = useState("");
+    const [title, setTitle] = useState("");
+    const [classId, setClassId] = useState("");
     const [dueDate, setDueDate] = useState("");
     const [dueTime, setDueTime] = useState("");
     const [instructions, setInstructions] = useState("");
@@ -10,16 +10,16 @@ export const usePublishAssignmentFormState = () => {
 
     return {
         state: {
-            assignmentName,
-            selectedModule,
+            title,
+            classId,
             dueDate,
             dueTime,
             instructions,
             aiGradingEnabled,
         },
         actions: {
-            setAssignmentName,
-            setSelectedModule,
+            setTitle,
+            setClassId,
             setDueDate,
             setDueTime,
             setInstructions,

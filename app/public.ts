@@ -10,3 +10,14 @@ export type {
     AppShellEnterClassChatPayload,
     AppShellViewAccess,
 } from "./model/appShellModel";
+export {
+    buildAssignmentClassNameMap,
+    buildSubmitAssignmentViewModel,
+    buildViewFeedbackGroups,
+} from "./model/appAssignmentViewModel";
+export {
+    resolveAssignmentPanelNode,
+    shouldShowLandingPage,
+    type AssignmentNoticeConfig,
+    type AssignmentNoticeCopy,
+} from "./model/appShellRenderModel";

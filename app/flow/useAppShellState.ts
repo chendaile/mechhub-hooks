@@ -39,6 +39,7 @@ import { useActiveChatTargetState } from "../states/useActiveChatTargetState";
 import { useSelectedClassState } from "../states/useSelectedClassState";
 import { useAppShareFlow } from "../useAppShareFlow";
 import { useAppView } from "../useAppView";
+import { usePublishAssignmentCreationFlow } from "./usePublishAssignmentCreationFlow";
 import type { ActiveView } from "../types/view";
 import {
     APP_CLASS_MEMBERSHIP_NOTICES,
@@ -530,11 +531,12 @@ export const useAppShellState = () => {
             const sessionTitle = `复制分享: ${sourceTitle}`.slice(0, 40);
 
             try {
-                const savedSession = await chatUseCases.chatQueryUseCases.saveChat(
-                    null,
-                    sharedMessages,
-                    sessionTitle,
-                );
+                const savedSession =
+                    await chatUseCases.chatQueryUseCases.saveChat(
+                        null,
+                        sharedMessages,
+                        sessionTitle,
+                    );
 
                 upsertSavedChatSession(queryClient, viewerUserId, savedSession);
                 await queryClient.invalidateQueries({
@@ -672,7 +674,11 @@ export const useAppShellState = () => {
                 return false;
             }
         },
-        [assignmentById, submitAssignmentFromChatMutation, submitToAssignmentIntent],
+        [
+            assignmentById,
+            submitAssignmentFromChatMutation,
+            submitToAssignmentIntent,
+        ],
     );
 
     const handleSubmitCurrentSessionToAssignment = useCallback(
@@ -701,7 +707,11 @@ export const useAppShellState = () => {
                 return false;
             }
         },
-        [assignmentById, safeCurrentSessionId, submitAssignmentFromChatMutation],
+        [
+            assignmentById,
+            safeCurrentSessionId,
+            submitAssignmentFromChatMutation,
+        ],
     );
 
     const handleCreateAssignment = useCallback(
@@ -715,6 +725,12 @@ export const useAppShellState = () => {
         },
         [createAssignmentMutation],
     );
+
+    const { handlePublishAssignment } = usePublishAssignmentCreationFlow({
+        classOptions,
+        onCreateAssignment: handleCreateAssignment,
+        onPublished: () => guardedSetActiveView("gradeAssignment"),
+    });
 
     const handleGenerateGradeDraft = useCallback(
         async (
@@ -851,6 +867,7 @@ export const useAppShellState = () => {
             handleConfirmSubmitToAssignment,
             handleSubmitCurrentSessionToAssignment,
             handleCreateAssignment,
+            handlePublishAssignment,
             handleGenerateGradeDraft,
             handleSaveGradeReview,
             handleReleaseGrade,
