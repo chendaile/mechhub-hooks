@@ -17,6 +17,7 @@ export type {
 export type {
     CreateClassPayload,
     CreateInviteCodePayload,
+    DeleteClassPayload,
     JoinClassByCodePayload,
     AssignTeacherPayload,
     RemoveStudentPayload,

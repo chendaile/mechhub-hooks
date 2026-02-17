@@ -6,6 +6,9 @@ interface StreamInvokePayload {
         role: string;
         content: unknown;
     }>;
+    mode?: "study" | "correct";
+    imageUrls?: string[];
+    ocrText?: string;
     model?: string;
     enableThinking: boolean;
     includeReasoning: boolean;
