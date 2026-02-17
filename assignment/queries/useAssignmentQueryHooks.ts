@@ -3,7 +3,15 @@ import { useSessionQuery } from "../../auth/queries/useSession";
 import { assignmentDomainInterface } from "../interface/AssignmentDomainInterface";
 import { assignmentKeys } from "./assignmentKeys";
 
-export const useMyAssignmentsQuery = (classId?: string, enabled = true) => {
+export const useMyAssignmentsQuery = (
+    classId?: string,
+    enabled = true,
+    options?: {
+        staleTime?: number;
+        refetchInterval?: number | false;
+        refetchOnMount?: boolean | "always";
+    },
+) => {
     const { data: session } = useSessionQuery();
     const viewerUserId = session?.user.id ?? null;
 
@@ -11,7 +19,9 @@ export const useMyAssignmentsQuery = (classId?: string, enabled = true) => {
         queryKey: assignmentKeys.myAssignments(viewerUserId, classId),
         queryFn: () => assignmentDomainInterface.listMyAssignments(classId),
         enabled: enabled && !!session,
-        staleTime: 15_000,
+        staleTime: options?.staleTime ?? 15_000,
+        refetchInterval: options?.refetchInterval,
+        refetchOnMount: options?.refetchOnMount,
     });
 };
 
@@ -74,7 +84,15 @@ export const useAssignmentSubmissionsQuery = (
     });
 };
 
-export const useMyFeedbackQuery = (classId?: string, enabled = true) => {
+export const useMyFeedbackQuery = (
+    classId?: string,
+    enabled = true,
+    options?: {
+        staleTime?: number;
+        refetchInterval?: number | false;
+        refetchOnMount?: boolean | "always";
+    },
+) => {
     const { data: session } = useSessionQuery();
     const viewerUserId = session?.user.id ?? null;
 
@@ -82,7 +100,9 @@ export const useMyFeedbackQuery = (classId?: string, enabled = true) => {
         queryKey: assignmentKeys.myFeedback(viewerUserId, classId),
         queryFn: () => assignmentDomainInterface.listMyFeedback(classId),
         enabled: enabled && !!session,
-        staleTime: 15_000,
+        staleTime: options?.staleTime ?? 15_000,
+        refetchInterval: options?.refetchInterval,
+        refetchOnMount: options?.refetchOnMount,
     });
 };
 

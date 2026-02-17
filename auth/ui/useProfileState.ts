@@ -10,10 +10,12 @@ const DEFAULT_USER = {
 export const useProfileState = (
     user: UserProfile = DEFAULT_USER,
     onUpdateProfile: (name: string, avatar: string) => void = () => {},
+    onUploadAvatar?: (file: File) => Promise<string>,
 ) => {
     const [name, setName] = useState(user.name);
     const [avatar, setAvatar] = useState(user.avatar);
     const [isEditing, setIsEditing] = useState(false);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     useEffect(() => {
         setName(user.name);
@@ -23,6 +25,21 @@ export const useProfileState = (
     const handleSave = () => {
         onUpdateProfile(name, avatar);
         setIsEditing(false);
+    };
+
+    const handleAvatarUpload = async (file: File) => {
+        if (!onUploadAvatar) {
+            return;
+        }
+
+        setIsUploadingAvatar(true);
+        try {
+            const uploadedUrl = await onUploadAvatar(file);
+            setAvatar(uploadedUrl);
+        } catch {
+        } finally {
+            setIsUploadingAvatar(false);
+        }
     };
 
     const handleCancel = () => {
@@ -36,6 +53,7 @@ export const useProfileState = (
         role: user.role,
         avatar,
         isEditing,
+        isUploadingAvatar,
     };
 
     const derived = {
@@ -56,6 +74,7 @@ export const useProfileState = (
         setName,
         setAvatar,
         setIsEditing,
+        handleAvatarUpload,
         handleSave,
         handleCancel,
     };
@@ -71,6 +90,8 @@ export const useProfileState = (
         setAvatar: actions.setAvatar,
         isEditing: state.isEditing,
         setIsEditing: actions.setIsEditing,
+        isUploadingAvatar: state.isUploadingAvatar,
+        handleAvatarUpload: actions.handleAvatarUpload,
         handleSave: actions.handleSave,
         handleCancel: actions.handleCancel,
         containerVariants: derived.containerVariants,

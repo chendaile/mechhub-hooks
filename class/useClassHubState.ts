@@ -38,6 +38,7 @@ interface UseClassHubStateProps {
         threadId: string,
     ) => Promise<boolean>;
     onDeleteClass?: (classId: string) => Promise<boolean>;
+    onLeaveClass?: (classId: string) => Promise<boolean>;
 }
 
 export const useClassHubState = ({
@@ -47,14 +48,19 @@ export const useClassHubState = ({
     onRenameClassThread,
     onDeleteClassThread,
     onDeleteClass,
+    onLeaveClass,
 }: UseClassHubStateProps) => {
     const [screen, setScreen] = useState<HubScreen>("collection");
 
     const [createClassName, setCreateClassName] = useState("");
     const [createClassDescription, setCreateClassDescription] = useState("");
-    const [createTeacherUserId, setCreateTeacherUserId] = useState("");
 
     const [inviteCodeInput, setInviteCodeInput] = useState("");
+    const [threadTitleInput, setThreadTitleInput] = useState("");
+    const [inviteCodeForDisplay, setInviteCodeForDisplay] = useState<{
+        classId: string;
+        code: string;
+    } | null>(null);
 
     const classContextQuery = useMyClassContextQuery();
 
@@ -100,12 +106,18 @@ export const useClassHubState = ({
         !!selectedClass &&
         (!!classContextQuery.data?.isAdmin ||
             selectedClass?.role === "teacher");
+    const canLeaveClass = !!selectedClass;
     const canManageThreads = canCreateThread;
     const isDashboardEnabled = screen === "dashboard" && !!selectedClassId;
 
     const classMembersQuery = useClassMembersQuery(
         selectedClassId ?? undefined,
         isDashboardEnabled,
+        {
+            staleTime: 5_000,
+            refetchInterval: 10_000,
+            refetchOnMount: "always",
+        },
     );
     const classThreadsQuery = useClassThreadsQuery(
         selectedClassId ?? undefined,
@@ -116,19 +128,28 @@ export const useClassHubState = ({
         selectedClassId ?? undefined,
         canViewInviteCodes,
     );
+    const isLoadingMembers = classMembersQuery.isLoading;
 
     const teachers = classMembersQuery.data?.teachers ?? [];
     const students = classMembersQuery.data?.students ?? [];
     const threads = (classThreadsQuery.data ?? []).filter((thread) =>
         isHubThreadType(thread.threadType),
     );
-    const inviteCodeDisplayText = useMemo(() => {
+    const inviteCodeValue = useMemo(() => {
         if (!canViewInviteCodes) {
-            return undefined;
+            return null;
+        }
+
+        const createdCode =
+            inviteCodeForDisplay?.classId === selectedClassId
+                ? inviteCodeForDisplay.code
+                : null;
+        if (createdCode) {
+            return createdCode;
         }
 
         if (inviteCodesQuery.isLoading) {
-            return "加载中...";
+            return null;
         }
 
         const latestActiveCode = (inviteCodesQuery.data ?? [])
@@ -143,12 +164,34 @@ export const useClassHubState = ({
                 return rightTime - leftTime;
             })[0];
 
-        return latestActiveCode ? latestActiveCode.code : "暂无";
-    }, [canViewInviteCodes, inviteCodesQuery.data, inviteCodesQuery.isLoading]);
+        return latestActiveCode ? latestActiveCode.code : null;
+    }, [
+        canViewInviteCodes,
+        inviteCodeForDisplay,
+        inviteCodesQuery.data,
+        inviteCodesQuery.isLoading,
+        selectedClassId,
+    ]);
+
+    const inviteCodeDisplayText = useMemo(() => {
+        if (!canViewInviteCodes) {
+            return undefined;
+        }
+
+        if (inviteCodesQuery.isLoading && !inviteCodeValue) {
+            return "加载中...";
+        }
+
+        return inviteCodeValue || "暂无";
+    }, [canViewInviteCodes, inviteCodesQuery.isLoading, inviteCodeValue]);
 
     const createClassMutation = useCreateClassMutation();
     const joinClassMutation = useJoinClassByInviteCodeMutation();
     const createGroupThreadMutation = useCreateGroupThreadMutation();
+
+    useEffect(() => {
+        setThreadTitleInput("");
+    }, [selectedClassId]);
 
     const openThreadChat = (threadId: string, threadTitle?: string) => {
         if (!selectedClass) {
@@ -178,12 +221,16 @@ export const useClassHubState = ({
             const createdClass = await createClassMutation.mutateAsync({
                 name: createClassName.trim(),
                 description: createClassDescription.trim(),
-                teacherUserId: createTeacherUserId.trim() || undefined,
             });
+            if (createdClass.inviteCode) {
+                setInviteCodeForDisplay({
+                    classId: createdClass.classSummary.id,
+                    code: createdClass.inviteCode,
+                });
+            }
             onSelectedClassIdChange(createdClass.classSummary.id);
             setCreateClassName("");
             setCreateClassDescription("");
-            setCreateTeacherUserId("");
             setScreen("dashboard");
         } catch {}
     };
@@ -210,11 +257,23 @@ export const useClassHubState = ({
             return;
         }
 
+        const normalizedTitle = threadTitleInput.trim();
+        if (!normalizedTitle) {
+            toast.error("请输入话题名称");
+            return;
+        }
+
+        if (normalizedTitle.length > 60) {
+            toast.error("话题名称最多 60 个字符。");
+            return;
+        }
+
         try {
             const newThread = await createGroupThreadMutation.mutateAsync({
                 classId: selectedClassId,
-                title: `班级讨论 ${threads.filter((thread) => thread.threadType === "group").length + 1}`,
+                title: normalizedTitle,
             });
+            setThreadTitleInput("");
             openThreadChat(newThread.id, newThread.title);
         } catch {}
     };
@@ -274,6 +333,20 @@ export const useClassHubState = ({
         await onDeleteClassThread(selectedClassId, threadId);
     };
 
+    const handleCopyInviteCode = async () => {
+        if (!inviteCodeValue) {
+            toast.error("暂无可复制的邀请码");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(inviteCodeValue);
+            toast.success("邀请码已复制");
+        } catch {
+            toast.error("复制失败");
+        }
+    };
+
     const handleDeleteClass = async () => {
         if (!selectedClass || !canDeleteClass) {
             toast.error("只有老师或管理员可以删除班级。");
@@ -299,6 +372,31 @@ export const useClassHubState = ({
         }
     };
 
+    const handleLeaveClass = async () => {
+        if (!selectedClass || !canLeaveClass) {
+            toast.error("无法退出当前班级。");
+            return;
+        }
+
+        if (!onLeaveClass) {
+            toast.error("退出班级功能不可用。");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `确认退出班级「${selectedClass.name}」吗？退出后需要重新加入。`,
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        const success = await onLeaveClass(selectedClass.id);
+        if (success) {
+            onSelectedClassIdChange(null);
+            setScreen("collection");
+        }
+    };
+
     return {
         screen,
         setScreen,
@@ -308,8 +406,6 @@ export const useClassHubState = ({
         setCreateClassName,
         createClassDescription,
         setCreateClassDescription,
-        createTeacherUserId,
-        setCreateTeacherUserId,
         handleCreateClass,
         isCreatingClass: createClassMutation.isPending,
         inviteCodeInput,
@@ -320,14 +416,21 @@ export const useClassHubState = ({
         students,
         threads,
         handleCreateThread,
+        threadTitleInput,
+        setThreadTitleInput,
         canCreateThread,
         canManageThreads,
         canDeleteClass,
+        canLeaveClass,
         handleRenameThread,
         handleDeleteThread,
         handleDeleteClass,
+        handleLeaveClass,
         isCreatingThread: createGroupThreadMutation.isPending,
+        isLoadingMembers,
         openThreadChat,
         inviteCodeDisplayText,
+        inviteCodeValue,
+        handleCopyInviteCode,
     };
 };

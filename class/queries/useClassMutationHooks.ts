@@ -4,10 +4,12 @@ import { useSessionQuery } from "../../auth/queries/useSession";
 import { classDomainInterface } from "../interface/ClassDomainInterface";
 import type {
     AssignTeacherPayload,
+    ClassThreadMessage,
     CreateClassPayload,
     CreateInviteCodePayload,
     DeleteClassThreadPayload,
     DeleteClassPayload,
+    LeaveClassPayload,
     JoinClassByCodePayload,
     PostClassMessagePayload,
     RenameClassThreadPayload,
@@ -63,6 +65,31 @@ export const useDeleteClassMutation = () => {
         },
         onError: (error) => {
             toast.error(getErrorMessage(error, "删除班级失败"));
+        },
+    });
+};
+
+export const useLeaveClassMutation = () => {
+    const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
+
+    return useMutation({
+        mutationFn: (payload: LeaveClassPayload) =>
+            classDomainInterface.leaveClass(payload),
+        onSuccess: async (_, payload) => {
+            toast.success("已退出班级");
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.all(viewerUserId),
+            });
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.threads(viewerUserId, payload.classId),
+            });
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.members(viewerUserId, payload.classId),
+            });
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error, "退出班级失败"));
         },
     });
 };
@@ -249,22 +276,179 @@ export const useDeleteClassThreadMutation = () => {
 export const usePostClassMessageMutation = () => {
     const queryClient = useQueryClient();
     const viewerUserId = useViewerUserId();
+    const { data: session } = useSessionQuery();
+
+    const userMetadata =
+        (session?.user?.user_metadata as Record<string, unknown> | null) ?? {};
+    const viewerName =
+        typeof userMetadata.name === "string"
+            ? userMetadata.name
+            : session?.user?.email ?? "You";
+    const viewerAvatar =
+        typeof userMetadata.avatar === "string" ? userMetadata.avatar : null;
+
+    const normalizeOptimisticContent = (
+        content: Record<string, unknown> | string,
+    ) => {
+        if (typeof content === "string") {
+            return { text: content };
+        }
+        if (content && typeof content === "object" && !Array.isArray(content)) {
+            return content;
+        }
+        return { text: "" };
+    };
+
+    const getContentText = (content: Record<string, unknown>) => {
+        const text =
+            typeof content.text === "string"
+                ? content.text
+                : typeof content.value === "string"
+                  ? content.value
+                  : "";
+        return text.trim();
+    };
+
+    const createTempId = (prefix: string) => {
+        const random =
+            typeof crypto !== "undefined" && crypto.randomUUID
+                ? crypto.randomUUID()
+                : Math.random().toString(36).slice(2);
+        return `${prefix}-${Date.now()}-${random}`;
+    };
 
     return useMutation({
         mutationFn: (payload: PostClassMessagePayload) =>
             classDomainInterface.postClassMessage(payload),
-        onSuccess: async (_, payload) => {
+        onMutate: async (payload) => {
+            const queryKey = classKeys.threadMessages(
+                viewerUserId,
+                payload.threadId,
+            );
+            await queryClient.cancelQueries({ queryKey });
+
+            const previousMessages =
+                queryClient.getQueryData<ClassThreadMessage[]>(queryKey) ?? [];
+
+            const normalizedContent = normalizeOptimisticContent(
+                payload.content,
+            );
+            const contentText = getContentText(normalizedContent);
+            const mentionsAi = /@ai\b/i.test(contentText);
+            const now = new Date().toISOString();
+            const aiTimestamp = new Date(Date.now() + 1).toISOString();
+
+            const optimisticUserId = createTempId("optimistic-user");
+            const optimisticMessages = [
+                ...previousMessages,
+                {
+                    id: optimisticUserId,
+                    threadId: payload.threadId,
+                    senderUserId: viewerUserId ?? undefined,
+                    senderName: viewerName,
+                    senderEmail: session?.user?.email ?? null,
+                    senderAvatar: viewerAvatar,
+                    role: "user",
+                    content: normalizedContent,
+                    mentionsAi,
+                    replyToMessageId: null,
+                    createdAt: now,
+                },
+            ];
+
+            const optimisticAiId = mentionsAi
+                ? createTempId("optimistic-ai")
+                : null;
+
+            if (optimisticAiId) {
+                optimisticMessages.push({
+                    id: optimisticAiId,
+                    threadId: payload.threadId,
+                    senderUserId: null,
+                    senderName: null,
+                    senderEmail: null,
+                    senderAvatar: null,
+                    role: "assistant",
+                    content: { kind: "ai_typing" },
+                    mentionsAi: false,
+                    replyToMessageId: null,
+                    createdAt: aiTimestamp,
+                });
+            }
+
+            queryClient.setQueryData(queryKey, optimisticMessages);
+
+            return {
+                previousMessages,
+                optimisticUserId,
+                optimisticAiId,
+            };
+        },
+        onSuccess: async (result, payload, context) => {
+            const queryKey = classKeys.threadMessages(
+                viewerUserId,
+                payload.threadId,
+            );
+            const currentMessages =
+                queryClient.getQueryData<ClassThreadMessage[]>(queryKey) ?? [];
+
+            const upsertMessage = (
+                messages: typeof currentMessages,
+                message: (typeof currentMessages)[number],
+                fallbackId?: string | null,
+            ) => {
+                const index = messages.findIndex(
+                    (item) =>
+                        item.id === message.id ||
+                        (fallbackId ? item.id === fallbackId : false),
+                );
+                if (index === -1) {
+                    return [...messages, message];
+                }
+                const next = [...messages];
+                next[index] = message;
+                return next;
+            };
+
+            let nextMessages = currentMessages;
+            if (result.message) {
+                nextMessages = upsertMessage(
+                    nextMessages,
+                    result.message,
+                    context?.optimisticUserId,
+                );
+            }
+            if (context?.optimisticAiId) {
+                if (result.aiMessage) {
+                    nextMessages = upsertMessage(
+                        nextMessages,
+                        result.aiMessage,
+                        context.optimisticAiId,
+                    );
+                } else {
+                    nextMessages = nextMessages.filter(
+                        (item) => item.id !== context.optimisticAiId,
+                    );
+                }
+            }
+
+            queryClient.setQueryData(queryKey, nextMessages);
+
             await queryClient.invalidateQueries({
-                queryKey: classKeys.threadMessages(
-                    viewerUserId,
-                    payload.threadId,
-                ),
+                queryKey,
             });
             await queryClient.invalidateQueries({
                 queryKey: classKeys.all(viewerUserId),
             });
         },
-        onError: (error) => {
+        onError: (error, payload, context) => {
+            const queryKey = classKeys.threadMessages(
+                viewerUserId,
+                payload.threadId,
+            );
+            if (context?.previousMessages) {
+                queryClient.setQueryData(queryKey, context.previousMessages);
+            }
             toast.error(getErrorMessage(error, "发送消息失败"));
         },
     });

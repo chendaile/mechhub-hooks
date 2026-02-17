@@ -3,6 +3,7 @@ import {
     createClass,
     createInviteCode,
     deleteClass,
+    leaveClass,
     getMyClassContext,
     joinClassByInviteCode,
     listClassMembers,
@@ -31,6 +32,7 @@ export interface ClassDomainInterface {
     createClass: typeof createClass;
     assignTeacherToClass: typeof assignTeacherToClass;
     deleteClass: typeof deleteClass;
+    leaveClass: typeof leaveClass;
     createInviteCode: typeof createInviteCode;
     revokeInviteCode: typeof revokeInviteCode;
     joinClassByInviteCode: typeof joinClassByInviteCode;
@@ -53,6 +55,7 @@ export const createClassDomainInterface = (): ClassDomainInterface => ({
     createClass,
     assignTeacherToClass,
     deleteClass,
+    leaveClass,
     createInviteCode,
     revokeInviteCode,
     joinClassByInviteCode,

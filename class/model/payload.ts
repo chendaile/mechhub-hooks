@@ -1,7 +1,6 @@
 export interface CreateClassPayload {
     name: string;
     description?: string;
-    teacherUserId?: string;
 }
 
 export interface CreateInviteCodePayload {
@@ -25,6 +24,10 @@ export interface RemoveStudentPayload {
 }
 
 export interface DeleteClassPayload {
+    classId: string;
+}
+
+export interface LeaveClassPayload {
     classId: string;
 }
 

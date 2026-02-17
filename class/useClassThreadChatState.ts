@@ -35,7 +35,6 @@ const hasAttachments = (payload: SubmitMessage) =>
 
 export const useClassThreadChatState = (threadId: string) => {
     const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
-
     const threadMessagesQuery = useClassThreadMessagesQuery(
         threadId,
         !!threadId,
@@ -99,7 +98,8 @@ export const useClassThreadChatState = (threadId: string) => {
                     fileAttachments: payload.fileAttachments ?? [],
                 },
             });
-        } catch {}
+        } catch {
+        }
     };
 
     return {

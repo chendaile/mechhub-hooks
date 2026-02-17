@@ -9,6 +9,7 @@ import type {
     JoinClassByCodePayload,
     MyClassContext,
     RemoveStudentPayload,
+    LeaveClassPayload,
 } from "../types";
 import {
     normalizeClassMember,
@@ -54,7 +55,6 @@ export const createClass = async (
         action: "create_class",
         name: payload.name,
         description: payload.description ?? "",
-        teacher_user_id: payload.teacherUserId ?? "",
     });
 
     return {
@@ -185,6 +185,20 @@ export const deleteClass = async (
 ): Promise<{ classId: string }> => {
     const result = await invokeClassManagement<{ class_id?: unknown }>({
         action: "delete_class",
+        class_id: payload.classId,
+    });
+
+    return {
+        classId:
+            typeof result.class_id === "string" ? result.class_id : payload.classId,
+    };
+};
+
+export const leaveClass = async (
+    payload: LeaveClassPayload,
+): Promise<{ classId: string }> => {
+    const result = await invokeClassManagement<{ class_id?: unknown }>({
+        action: "leave_class",
         class_id: payload.classId,
     });
 

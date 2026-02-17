@@ -23,6 +23,7 @@ export type {
     PostClassMessagePayload,
     RenameClassThreadPayload,
     DeleteClassThreadPayload,
+    LeaveClassPayload,
     SharePrivateChatPayload,
     ShareGradeResultPayload,
 } from "./model/payload";

@@ -28,6 +28,7 @@ import {
     useClassThreadsBatchQuery,
     useCreateGroupThreadMutation,
     useDeleteClassMutation,
+    useLeaveClassMutation,
     useDeleteClassThreadMutation,
     useMyClassContextQuery,
     useRenameClassThreadMutation,
@@ -74,6 +75,9 @@ export const useAppShellState = () => {
     >(null);
     const [submitToAssignmentIntent, setSubmitToAssignmentIntent] =
         useState<SubmitToAssignmentIntent | null>(null);
+    const [generatingGradeDraftIds, setGeneratingGradeDraftIds] = useState<
+        Set<string>
+    >(new Set());
     const previousViewerUserIdRef = useRef<string | null | undefined>(
         undefined,
     );
@@ -147,14 +151,6 @@ export const useAppShellState = () => {
     );
     const hasStudentClassMembership = joinedClasses.length > 0;
     const hasTeacherClassMembership = teachingClasses.length > 0;
-    const myAssignmentsQuery = useMyAssignmentsQuery(
-        undefined,
-        !!session && canAccessStudentAssignments,
-    );
-    const myFeedbackQuery = useMyFeedbackQuery(
-        undefined,
-        !!session && canAccessStudentAssignments,
-    );
     const classThreadsBatchQuery = useClassThreadsBatchQuery(
         classOptions.map((classItem) => classItem.id),
         !!session && canAccessClassHub,
@@ -215,6 +211,31 @@ export const useAppShellState = () => {
             handleSendMessage: guardedSendMessage,
         });
 
+    const isSubmitAssignmentView = activeView === "submitAssignment";
+    const isViewFeedbackView = activeView === "viewFeedback";
+    const myAssignmentsQuery = useMyAssignmentsQuery(
+        undefined,
+        !!session && canAccessStudentAssignments,
+        isSubmitAssignmentView
+            ? {
+                  staleTime: 5_000,
+                  refetchInterval: 10_000,
+                  refetchOnMount: "always",
+              }
+            : undefined,
+    );
+    const myFeedbackQuery = useMyFeedbackQuery(
+        undefined,
+        !!session && canAccessStudentAssignments,
+        isViewFeedbackView
+            ? {
+                  staleTime: 5_000,
+                  refetchInterval: 10_000,
+                  refetchOnMount: "always",
+              }
+            : undefined,
+    );
+
     const fallbackView = useMemo(
         () => resolveFallbackView(viewAccess),
         [viewAccess],
@@ -229,6 +250,20 @@ export const useAppShellState = () => {
             setActiveView(fallbackView);
         }
     }, [activeView, fallbackView, session, setActiveView, viewAccess]);
+
+    useEffect(() => {
+        if (activeView !== "submitAssignment") {
+            return;
+        }
+        void myAssignmentsQuery.refetch();
+    }, [activeView, myAssignmentsQuery.refetch]);
+
+    useEffect(() => {
+        if (activeView !== "viewFeedback") {
+            return;
+        }
+        void myFeedbackQuery.refetch();
+    }, [activeView, myFeedbackQuery.refetch]);
 
     const guardedSetActiveView = useCallback(
         (view: ActiveView) => {
@@ -367,6 +402,7 @@ export const useAppShellState = () => {
 
     const createGroupThreadMutation = useCreateGroupThreadMutation();
     const deleteClassMutation = useDeleteClassMutation();
+    const leaveClassMutation = useLeaveClassMutation();
     const renameClassThreadMutation = useRenameClassThreadMutation();
     const deleteClassThreadMutation = useDeleteClassThreadMutation();
     const createAssignmentMutation = useCreateAssignmentMutation();
@@ -540,6 +576,40 @@ export const useAppShellState = () => {
         ],
     );
 
+    const handleLeaveClass = useCallback(
+        async (classId: string) => {
+            try {
+                await leaveClassMutation.mutateAsync({ classId });
+
+                const currentClassTarget =
+                    activeChatTargetState.state.classChatTarget;
+                if (currentClassTarget?.classId === classId) {
+                    activeChatTargetState.actions.setPrivateChatTarget();
+                }
+
+                selectedClassState.actions.setSelectedClassId(null);
+                guardedSetActiveView("classHub");
+
+                await queryClient.invalidateQueries({
+                    queryKey: assignmentKeys.all(viewerUserId),
+                });
+
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [
+            activeChatTargetState.actions,
+            activeChatTargetState.state.classChatTarget,
+            guardedSetActiveView,
+            leaveClassMutation,
+            queryClient,
+            selectedClassState.actions,
+            viewerUserId,
+        ],
+    );
+
     const handleCopySharedClassMessageToNewSession = useCallback(
         async (content: Record<string, unknown>) => {
             if (!canAccessChat) {
@@ -593,8 +663,29 @@ export const useAppShellState = () => {
         ],
     );
 
-    const studentAssignments = myAssignmentsQuery.data ?? [];
-    const feedbackSummaries = myFeedbackQuery.data ?? [];
+    const classIdSet = useMemo(
+        () => new Set(classOptions.map((classItem) => classItem.id)),
+        [classOptions],
+    );
+    const studentAssignments = useMemo(() => {
+        const assignments = myAssignmentsQuery.data ?? [];
+        if (classIdSet.size === 0) {
+            return [];
+        }
+        return assignments.filter((assignment) =>
+            classIdSet.has(assignment.classId),
+        );
+    }, [classIdSet, myAssignmentsQuery.data]);
+    const feedbackSummaries = useMemo(() => {
+        const feedback = myFeedbackQuery.data ?? [];
+        if (classIdSet.size === 0) {
+            return [];
+        }
+        return feedback.filter((item) => {
+            const classId = item.assignment?.classId || item.submission.classId;
+            return classIdSet.has(classId);
+        });
+    }, [classIdSet, myFeedbackQuery.data]);
 
     const assignmentById = useMemo(
         () =>
@@ -767,6 +858,11 @@ export const useAppShellState = () => {
             model?: string,
             options?: { silent?: boolean },
         ) => {
+            setGeneratingGradeDraftIds((previous) => {
+                const next = new Set(previous);
+                next.add(submissionId);
+                return next;
+            });
             if (!options?.silent) {
                 try {
                     await generateGradeDraftMutation.mutateAsync({
@@ -776,6 +872,12 @@ export const useAppShellState = () => {
                     return true;
                 } catch {
                     return false;
+                } finally {
+                    setGeneratingGradeDraftIds((previous) => {
+                        const next = new Set(previous);
+                        next.delete(submissionId);
+                        return next;
+                    });
                 }
             }
 
@@ -802,6 +904,12 @@ export const useAppShellState = () => {
                 return true;
             } catch {
                 return false;
+            } finally {
+                setGeneratingGradeDraftIds((previous) => {
+                    const next = new Set(previous);
+                    next.delete(submissionId);
+                    return next;
+                });
             }
         },
         [generateGradeDraftMutation, queryClient, viewerUserId],
@@ -887,6 +995,7 @@ export const useAppShellState = () => {
             handleRenameClassThread,
             handleDeleteClassThread,
             handleDeleteClass,
+            handleLeaveClass,
             handleEnterClassChat,
             handleShareChatMessageToClass,
             handleShareChatSessionToClass,
@@ -929,6 +1038,7 @@ export const useAppShellState = () => {
             studentAssignments,
             feedbackSummaries,
             submitTargetAssignments,
+            generatingGradeDraftIds,
             classHubProps: {
                 requesterEmail: session?.user.email,
                 canCreateClass:
@@ -942,6 +1052,7 @@ export const useAppShellState = () => {
                 onRenameClassThread: handleRenameClassThread,
                 onDeleteClassThread: handleDeleteClassThread,
                 onDeleteClass: handleDeleteClass,
+                onLeaveClass: handleLeaveClass,
             },
             classMembershipNotices: APP_CLASS_MEMBERSHIP_NOTICES,
         },

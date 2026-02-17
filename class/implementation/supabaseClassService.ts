@@ -3,6 +3,7 @@ export {
     createClass,
     createInviteCode,
     deleteClass,
+    leaveClass,
     getMyClassContext,
     joinClassByInviteCode,
     listClassMembers,

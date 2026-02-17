@@ -15,7 +15,17 @@ export const useMyClassContextQuery = () => {
     });
 };
 
-export const useClassMembersQuery = (classId?: string, enabled = true) => {
+export interface ClassMembersQueryOptions {
+    staleTime?: number;
+    refetchInterval?: number;
+    refetchOnMount?: boolean | "always";
+}
+
+export const useClassMembersQuery = (
+    classId?: string,
+    enabled = true,
+    options?: ClassMembersQueryOptions,
+) => {
     const { data: session } = useSessionQuery();
     const viewerUserId = session?.user.id ?? null;
 
@@ -23,7 +33,9 @@ export const useClassMembersQuery = (classId?: string, enabled = true) => {
         queryKey: classKeys.members(viewerUserId, classId ?? "unknown"),
         queryFn: () => classDomainInterface.listClassMembers(classId ?? ""),
         enabled: enabled && !!classId && !!session,
-        staleTime: 30_000,
+        staleTime: options?.staleTime ?? 30_000,
+        refetchInterval: options?.refetchInterval,
+        refetchOnMount: options?.refetchOnMount,
     });
 };
 

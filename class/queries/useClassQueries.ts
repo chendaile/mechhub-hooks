@@ -11,6 +11,7 @@ export {
     useAssignTeacherToClassMutation,
     useCreateClassMutation,
     useDeleteClassMutation,
+    useLeaveClassMutation,
     useDeleteClassThreadMutation,
     useCreateGroupThreadMutation,
     useCreateInviteCodeMutation,
