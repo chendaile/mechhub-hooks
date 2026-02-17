@@ -24,6 +24,10 @@ export interface RemoveStudentPayload {
     studentUserId: string;
 }
 
+export interface DeleteClassPayload {
+    classId: string;
+}
+
 export interface PostClassMessagePayload {
     threadId: string;
     content: Record<string, unknown> | string;

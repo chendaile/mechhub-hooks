@@ -1,11 +1,13 @@
 import type { AICompletionRequest } from "../../types";
 
+const THINKING_MODELS = new Set(["qwen3.5-plus", "qwen3.5-397b-a17b"]);
+
 export const isThinkingModel = (model?: string): boolean => {
     if (!model) {
         return false;
     }
 
-    return model.includes("thinking");
+    return model.includes("thinking") || THINKING_MODELS.has(model);
 };
 
 export const buildSystemPrompt = (

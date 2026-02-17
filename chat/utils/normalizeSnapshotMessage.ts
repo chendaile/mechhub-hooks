@@ -1,6 +1,6 @@
 import type { Message } from "../types";
 
-const DEFAULT_IMPORTED_MODEL = "qwen3-vl-235b-a22b-thinking";
+const DEFAULT_IMPORTED_MODEL = "qwen3.5-plus";
 
 export const normalizeSnapshotMessage = (value: unknown): Message | null => {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -80,6 +80,9 @@ export const normalizeSnapshotMessage = (value: unknown): Message | null => {
             : {}),
         ...(typeof record.reasoning === "string"
             ? { reasoning: record.reasoning }
+            : {}),
+        ...(typeof record.ocrText === "string"
+            ? { ocrText: record.ocrText }
             : {}),
         ...(typeof record.createdAt === "string"
             ? { createdAt: record.createdAt }

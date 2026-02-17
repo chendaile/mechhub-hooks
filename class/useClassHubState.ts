@@ -37,6 +37,7 @@ interface UseClassHubStateProps {
         classId: string,
         threadId: string,
     ) => Promise<boolean>;
+    onDeleteClass?: (classId: string) => Promise<boolean>;
 }
 
 export const useClassHubState = ({
@@ -45,6 +46,7 @@ export const useClassHubState = ({
     onEnterClassChat,
     onRenameClassThread,
     onDeleteClassThread,
+    onDeleteClass,
 }: UseClassHubStateProps) => {
     const [screen, setScreen] = useState<HubScreen>("collection");
 
@@ -92,6 +94,10 @@ export const useClassHubState = ({
     );
     const canCreateThread =
         !!selectedClassId &&
+        (!!classContextQuery.data?.isAdmin ||
+            selectedClass?.role === "teacher");
+    const canDeleteClass =
+        !!selectedClass &&
         (!!classContextQuery.data?.isAdmin ||
             selectedClass?.role === "teacher");
     const canManageThreads = canCreateThread;
@@ -268,6 +274,31 @@ export const useClassHubState = ({
         await onDeleteClassThread(selectedClassId, threadId);
     };
 
+    const handleDeleteClass = async () => {
+        if (!selectedClass || !canDeleteClass) {
+            toast.error("只有老师或管理员可以删除班级。");
+            return;
+        }
+
+        if (!onDeleteClass) {
+            toast.error("删除班级功能不可用。");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `确认删除班级「${selectedClass.name}」吗？该操作不可恢复。`,
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        const success = await onDeleteClass(selectedClass.id);
+        if (success) {
+            onSelectedClassIdChange(null);
+            setScreen("collection");
+        }
+    };
+
     return {
         screen,
         setScreen,
@@ -291,8 +322,10 @@ export const useClassHubState = ({
         handleCreateThread,
         canCreateThread,
         canManageThreads,
+        canDeleteClass,
         handleRenameThread,
         handleDeleteThread,
+        handleDeleteClass,
         isCreatingThread: createGroupThreadMutation.isPending,
         openThreadChat,
         inviteCodeDisplayText,

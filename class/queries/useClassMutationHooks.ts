@@ -7,6 +7,7 @@ import type {
     CreateClassPayload,
     CreateInviteCodePayload,
     DeleteClassThreadPayload,
+    DeleteClassPayload,
     JoinClassByCodePayload,
     PostClassMessagePayload,
     RenameClassThreadPayload,
@@ -43,6 +44,25 @@ export const useCreateClassMutation = () => {
         },
         onError: (error) => {
             toast.error(getErrorMessage(error, "创建班级失败"));
+        },
+    });
+};
+
+export const useDeleteClassMutation = () => {
+    const queryClient = useQueryClient();
+    const viewerUserId = useViewerUserId();
+
+    return useMutation({
+        mutationFn: (payload: DeleteClassPayload) =>
+            classDomainInterface.deleteClass(payload),
+        onSuccess: async () => {
+            toast.success("班级已删除");
+            await queryClient.invalidateQueries({
+                queryKey: classKeys.context(viewerUserId),
+            });
+        },
+        onError: (error) => {
+            toast.error(getErrorMessage(error, "删除班级失败"));
         },
     });
 };

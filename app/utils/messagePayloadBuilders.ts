@@ -1,6 +1,6 @@
 import type { ChatMode, FileAttachment, SubmitMessage } from "../../chat/types";
 
-const DEFAULT_CHAT_MODEL = "qwen3-vl-235b-a22b-thinking";
+const DEFAULT_CHAT_MODEL = "qwen3.5-plus";
 
 export const buildSubmitMessagePayload = (
     payload: SubmitMessage,

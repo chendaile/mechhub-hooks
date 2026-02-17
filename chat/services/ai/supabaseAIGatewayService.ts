@@ -3,12 +3,13 @@ import type {
     AICompletionRequest,
     AICompletionResponse,
     Message,
+    OcrResult,
 } from "../../types";
 import {
     mapMessagesToApiPayload,
     getLatestUserImageUrls,
 } from "./aiMessageMapper";
-import { buildSystemPrompt, isThinkingModel } from "./aiPromptBuilder";
+import { isThinkingModel } from "./aiPromptBuilder";
 import { parseGradingResult } from "./aiResponseParser";
 import { streamChatResponse } from "./aiStreamClient";
 import {
@@ -16,21 +17,52 @@ import {
     type AILogger,
 } from "./aiTitleService";
 
+const DEFAULT_OCR_PROMPT =
+    "grounding mode,document to markdown,like this'<|ref|>text<|/ref|><|det|>[[90, 272, 240, 302]]<|/det|>'";
+
 const createPayloadMessages = (request: AICompletionRequest) => {
     const userImageUrls = getLatestUserImageUrls(request.messages);
-    const systemPrompt = buildSystemPrompt(request.mode, userImageUrls);
     const apiMessages = mapMessagesToApiPayload(request.messages);
 
     return {
         userImageUrls,
-        payloadMessages: [
-            {
-                role: "system",
-                content: systemPrompt,
-            },
-            ...apiMessages,
-        ],
+        payloadMessages: apiMessages,
     };
+};
+
+export const getOcrResult = async (
+    imageUrls: string[],
+): Promise<OcrResult[]> => {
+    if (!imageUrls || imageUrls.length === 0) {
+        return [];
+    }
+
+    const { data, error } = await supabase.functions.invoke("ocr-response", {
+        body: {
+            imageUrls,
+            prompt: DEFAULT_OCR_PROMPT,
+        },
+    });
+
+    if (error) {
+        throw new Error("OCR 服务暂时不可用，请稍后再试。");
+    }
+
+    const responseData = (data ?? {}) as {
+        results?: Array<{ imageUrl?: unknown; text?: unknown }>;
+    };
+
+    const results = Array.isArray(responseData.results)
+        ? responseData.results
+              .map((item) => ({
+                  imageUrl:
+                      typeof item.imageUrl === "string" ? item.imageUrl : "",
+                  text: typeof item.text === "string" ? item.text : "",
+              }))
+              .filter((item) => item.imageUrl)
+        : [];
+
+    return results;
 };
 
 export const getResponse = async (
@@ -43,6 +75,9 @@ export const getResponse = async (
     const { data, error } = await supabase.functions.invoke("chat-response", {
         body: {
             messages: payloadMessages,
+            mode: request.mode,
+            imageUrls: request.imageUrls,
+            ocrText: request.ocrText,
             model: request.model,
             enableThinking,
             includeReasoning,
@@ -99,6 +134,9 @@ export const getResponseStream = async (
     return streamChatResponse(
         {
             messages: payloadMessages,
+            mode: request.mode,
+            imageUrls: request.imageUrls,
+            ocrText: request.ocrText,
             model: request.model,
             enableThinking,
             includeReasoning,

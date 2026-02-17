@@ -8,6 +8,7 @@ import {
     generateTitle,
     getResponse,
     getResponseStream,
+    getOcrResult,
     parseGradingResult,
 } from "../services/ai/supabaseAIGatewayService";
 
@@ -27,6 +28,10 @@ export class SupabaseAIGateway {
         abortSignal?: AbortSignal,
     ): Promise<AICompletionResponse> {
         return getResponseStream(request, onChunk, abortSignal);
+    }
+
+    static async getOcrResult(imageUrls: string[]) {
+        return getOcrResult(imageUrls);
     }
 
     static parseGradingResult(

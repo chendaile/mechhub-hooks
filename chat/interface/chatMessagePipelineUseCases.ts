@@ -138,6 +138,33 @@ export const runCorrectPipeline = async ({
 
     const currentSession = cache.findChatById(activeId);
     const currentMessagesWithUser = currentSession?.messages || [];
+    let ocrText = "";
+
+    if (userImageUrls.length > 0) {
+        try {
+            const ocrResults = await aiGateway.getOcrResult(userImageUrls);
+            if (ocrResults.length > 0) {
+                ocrText = ocrResults
+                    .map((result, index) => {
+                        const header = `图片 ${index + 1}`;
+                        const text =
+                            typeof result.text === "string" ? result.text : "";
+                        return `${header}\n${text}`.trim();
+                    })
+                    .filter((segment) => segment.length > 0)
+                    .join("\n\n");
+            }
+
+            if (ocrText) {
+                updateMessage(cache, activeId, processingMessageId, (m) => ({
+                    ...m,
+                    ocrText,
+                }));
+            }
+        } catch (error) {
+            logger.error("OCR failed (correct mode)", error);
+        }
+    }
 
     try {
         const { response, gradingResult } = await streamAssistantResponse({
@@ -145,6 +172,7 @@ export const runCorrectPipeline = async ({
             messages: currentMessagesWithUser,
             submitMessage,
             mode: "correct",
+            ocrText,
             onUpdate: ({ text, reasoning }) => {
                 updateMessage(cache, activeId, processingMessageId, (m) => ({
                     ...m,
@@ -161,6 +189,7 @@ export const runCorrectPipeline = async ({
             text: response.text,
             reasoning: response.reasoning,
             mode: submitMessage.mode,
+            ocrText,
             gradingResult:
                 gradingResult ||
                 buildGradingPlaceholderResult(
@@ -179,6 +208,7 @@ export const runCorrectPipeline = async ({
             text: "",
             reasoning: "",
             mode: submitMessage.mode,
+            ocrText,
             gradingResult: buildGradingPlaceholderResult(
                 userImageUrls,
                 "批改失败，请稍后再试。",

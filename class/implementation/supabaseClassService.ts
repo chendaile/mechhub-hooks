@@ -2,6 +2,7 @@ export {
     assignTeacherToClass,
     createClass,
     createInviteCode,
+    deleteClass,
     getMyClassContext,
     joinClassByInviteCode,
     listClassMembers,

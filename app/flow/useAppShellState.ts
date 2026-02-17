@@ -27,6 +27,7 @@ import {
 import {
     useClassThreadsBatchQuery,
     useCreateGroupThreadMutation,
+    useDeleteClassMutation,
     useDeleteClassThreadMutation,
     useMyClassContextQuery,
     useRenameClassThreadMutation,
@@ -365,6 +366,7 @@ export const useAppShellState = () => {
     ]);
 
     const createGroupThreadMutation = useCreateGroupThreadMutation();
+    const deleteClassMutation = useDeleteClassMutation();
     const renameClassThreadMutation = useRenameClassThreadMutation();
     const deleteClassThreadMutation = useDeleteClassThreadMutation();
     const createAssignmentMutation = useCreateAssignmentMutation();
@@ -506,6 +508,33 @@ export const useAppShellState = () => {
             activeChatTargetState.actions,
             activeChatTargetState.state.classChatTarget,
             deleteClassThreadMutation,
+            guardedSetActiveView,
+            selectedClassState.actions,
+        ],
+    );
+
+    const handleDeleteClass = useCallback(
+        async (classId: string) => {
+            try {
+                await deleteClassMutation.mutateAsync({ classId });
+
+                const currentClassTarget =
+                    activeChatTargetState.state.classChatTarget;
+                if (currentClassTarget?.classId === classId) {
+                    activeChatTargetState.actions.setPrivateChatTarget();
+                }
+
+                selectedClassState.actions.setSelectedClassId(null);
+                guardedSetActiveView("classHub");
+                return true;
+            } catch {
+                return false;
+            }
+        },
+        [
+            activeChatTargetState.actions,
+            activeChatTargetState.state.classChatTarget,
+            deleteClassMutation,
             guardedSetActiveView,
             selectedClassState.actions,
         ],
@@ -857,6 +886,7 @@ export const useAppShellState = () => {
             handleCreateClassThread,
             handleRenameClassThread,
             handleDeleteClassThread,
+            handleDeleteClass,
             handleEnterClassChat,
             handleShareChatMessageToClass,
             handleShareChatSessionToClass,
@@ -911,6 +941,7 @@ export const useAppShellState = () => {
                 onEnterClassChat: handleEnterClassChat,
                 onRenameClassThread: handleRenameClassThread,
                 onDeleteClassThread: handleDeleteClassThread,
+                onDeleteClass: handleDeleteClass,
             },
             classMembershipNotices: APP_CLASS_MEMBERSHIP_NOTICES,
         },

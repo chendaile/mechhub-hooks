@@ -5,6 +5,7 @@ export const useGradingResultUiState = (images: ImageGradingResult[]) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [thinkingOpen, setThinkingOpen] = useState(false);
     const [bodyOpen, setBodyOpen] = useState(false);
+    const [ocrOpen, setOcrOpen] = useState(false);
 
     const handlePrevImage = () => {
         setCurrentImageIndex((prev) => {
@@ -28,13 +29,19 @@ export const useGradingResultUiState = (images: ImageGradingResult[]) => {
         setBodyOpen((prev) => !prev);
     };
 
+    const handleToggleOcr = () => {
+        setOcrOpen((prev) => !prev);
+    };
+
     return {
         currentImageIndex,
         thinkingOpen,
         bodyOpen,
+        ocrOpen,
         handlePrevImage,
         handleNextImage,
         handleToggleThinking,
         handleToggleBody,
+        handleToggleOcr,
     };
 };

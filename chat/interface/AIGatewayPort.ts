@@ -3,6 +3,7 @@ import type {
     AICompletionResponse,
     GradingResult,
     Message,
+    OcrResult,
 } from "../types";
 
 export interface AIGatewayPort {
@@ -14,6 +15,7 @@ export interface AIGatewayPort {
         }) => void,
         abortSignal?: AbortSignal,
     ): Promise<AICompletionResponse>;
+    getOcrResult(imageUrls: string[]): Promise<OcrResult[]>;
     parseGradingResult(
         aiReply: string,
         userImageUrls: string[],

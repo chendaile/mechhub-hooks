@@ -16,6 +16,7 @@ import {
     normalizeInviteCodeSummary,
 } from "./classNormalizers";
 import { invokeClassManagement } from "./classTransport";
+import type { DeleteClassPayload } from "../model/payload";
 
 export const getMyClassContext = async (): Promise<MyClassContext> => {
     const result = await invokeClassManagement<{
@@ -177,4 +178,18 @@ export const removeStudentFromClass = async (
         class_id: payload.classId,
         student_user_id: payload.studentUserId,
     });
+};
+
+export const deleteClass = async (
+    payload: DeleteClassPayload,
+): Promise<{ classId: string }> => {
+    const result = await invokeClassManagement<{ class_id?: unknown }>({
+        action: "delete_class",
+        class_id: payload.classId,
+    });
+
+    return {
+        classId:
+            typeof result.class_id === "string" ? result.class_id : payload.classId,
+    };
 };

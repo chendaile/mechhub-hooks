@@ -23,6 +23,7 @@ interface StreamOptions {
     messages: Message[];
     submitMessage: SubmitMessage;
     mode: "study" | "correct";
+    ocrText?: string;
     onUpdate: (update: StreamUpdate) => void;
     signal?: AbortSignal;
 }
@@ -32,6 +33,7 @@ export const streamAssistantResponse = async ({
     messages,
     submitMessage,
     mode,
+    ocrText,
     onUpdate,
     signal,
 }: StreamOptions): Promise<StreamResult> => {
@@ -44,6 +46,7 @@ export const streamAssistantResponse = async ({
             mode,
             imageUrls: submitMessage.imageUrls,
             fileAttachments: submitMessage.fileAttachments,
+            ocrText,
             model: submitMessage.model,
         },
         (chunk) => {

@@ -10,6 +10,7 @@ export { useClassThreadsBatchQuery } from "./useClassThreadsBatchQuery";
 export {
     useAssignTeacherToClassMutation,
     useCreateClassMutation,
+    useDeleteClassMutation,
     useDeleteClassThreadMutation,
     useCreateGroupThreadMutation,
     useCreateInviteCodeMutation,
